@@ -52,10 +52,18 @@ namespace RegionTrigger {
                     ) {
                     Regions.Clear();
                     while(reader.Read()) {
-                        int id = reader.Get<int>("Id");
-                        int regionId = reader.Get<int>("RegionId");
-                        string flagstr = reader.Get<string>("Flags");
-                        string groupstr = reader.Get<string>("TempGroup");
+                        var id = reader.Get<int>("Id");
+                        var regionId = reader.Get<int>("RegionId");
+                        var flagstr = reader.Get<string>("Flags");
+                        var groupstr = reader.Get<string>("GroupName");
+                        var entermsg = reader.Get<string>("EnterMsg");
+                        var leavemsg = reader.Get<string>("LeaveMsg");
+                        var msg = reader.Get<string>("Message");
+                        var msgitv = reader.Get<int>("MessageInterval");
+                        var tempgroupstr = reader.Get<string>("TempGroup");
+                        var itemb = reader.Get<string>("Itembans");
+                        var projb = reader.Get<string>("Projbans");
+                        var tileb = reader.Get<string>("Tilebans");
 
                     }
                 }
@@ -64,7 +72,7 @@ namespace RegionTrigger {
             }
         }
 
-        public bool AddRtRegion(int regionId, string flags = null) {
+        public bool AddRtRegion(int regionId, string flags = "None") {
             string query = "INSERT INTO RtRegions (RegionId, Flags) VALUES (@0, @1);";
             // todo: check flags here or other place
             try {
@@ -83,14 +91,8 @@ namespace RegionTrigger {
 
         public bool DeleteRtRegion(int rtregionid) {
             try {
-                //_database.Query("DELETE FROM Regions WHERE Id=@0 AND WorldID=@1", id, Main.worldID.ToString());
-
-                //Regions.RemoveAll(r => r.ID == id && r.WorldID == worldid);
-
-                //SELECT `rtregions`.* FROM `rtregions`, `regions` WHERE `rtregions`.RegionId = `regions`.Id
-
-
-                return true;
+                if (_database.Query("DELETE FROM RtRegions WHERE Id=@0", rtregionid) != 0 && Regions.RemoveAll(r => r.Id == rtregionid) != 0)
+                    return true;
             } catch(Exception e) {
 #if DEBUG
                 Debug.WriteLine(e);
@@ -101,6 +103,67 @@ namespace RegionTrigger {
             return false;
         }
 
+        public bool AddFlags(int rtregionId, string flags = "None") {
+            // if have - return
+            // if noexist - return
+            // update db
+            return false;
+        }
+
+        public bool SetGroup(int rtregionId, string group) {
+            // if have - return
+            // if noexist - return
+            // update db
+            return false;
+        }
+
+        public bool SetTempGroup(int rtregionId, string tempGroup) {
+            // if have - return
+            // if noexist - return
+            // update db
+            return false;
+        }
+
+        public bool AddItembans(int rtregionId, string item) {
+            // if have - return
+            // if noexist - return
+            // update db
+            return false;
+        }
+
+        public bool RmItembans(int rtregionId, string item) {
+            // if dont have - return
+            // if noexist - return
+            // update db
+            return false;
+        }
+
+        public bool AddProjbans(int rtregionId, int proj) {
+            // if have - return
+            // if noexist - return
+            // update db
+            return false;
+        }
+
+        public bool RmProjbans(int rtregionId, int proj) {
+            // if dont have - return
+            // if noexist - return
+            // update db
+            return false;
+        }
+        public bool AddTilebans(int rtregionId, int tile) {
+            // if have - return
+            // if noexist - return
+            // update db
+            return false;
+        }
+
+        public bool RmTilebans(int rtregionId, int tile) {
+            // if dont have - return
+            // if noexist - return
+            // update db
+            return false;
+        }
         public RtRegion GetRtRegionById(int id) {
             if(id < 0 || id >= Regions.Count)
                 return null;
