@@ -25,7 +25,7 @@ namespace RegionTrigger {
                                      new SqlColumn("Id", MySqlDbType.Int32) { Primary = true, AutoIncrement = true },
                                      new SqlColumn("RegionId", MySqlDbType.Int32) { Unique = true, NotNull = true },
                                      new SqlColumn("Flags", MySqlDbType.String),
-                                     new SqlColumn("Group", MySqlDbType.String, 32),
+                                     new SqlColumn("GroupName", MySqlDbType.String, 32),
                                      new SqlColumn("EnterMsg", MySqlDbType.String),
                                      new SqlColumn("LeaveMsg", MySqlDbType.String),
                                      new SqlColumn("Message", MySqlDbType.String, 20),
