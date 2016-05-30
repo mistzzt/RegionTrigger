@@ -91,7 +91,7 @@ namespace RegionTrigger {
 
         public bool DeleteRtRegion(int rtregionid) {
             try {
-                if (_database.Query("DELETE FROM RtRegions WHERE Id=@0", rtregionid) != 0 && Regions.RemoveAll(r => r.Id == rtregionid) != 0)
+                if(_database.Query("DELETE FROM RtRegions WHERE Id=@0", rtregionid) != 0 && Regions.RemoveAll(r => r.Id == rtregionid) != 0)
                     return true;
             } catch(Exception e) {
 #if DEBUG
@@ -104,10 +104,30 @@ namespace RegionTrigger {
         }
 
         public bool AddFlags(int rtregionId, string flags = "None") {
-            // if have - return
-            // if noexist - return
-            // update db
-            return false;
+            RtRegion rt = GetRtRegionById(rtregionId);
+            if(rt == null)
+                return false;
+            if(flags == "None")
+                return false;
+            // todo: it may be removed because in RtRegion.Events.Set the function will also validate events
+            var oldstr = rt.Events;
+            var newevt = flags.ToLower().Split(',');
+
+            if(oldstr.Length != 0)
+                oldstr += ',';
+            foreach(var en in newevt)
+                if(Events.Contains(en))
+                    oldstr += $"{en},";
+                else {
+                    TShock.Log.ConsoleError("[RTrigger] Invaild event in region {0}({1}): event \"{2}\" does not exist.", TShock.Regions.GetRegionByID(rtregionId).Name, rtregionId, en);
+                }
+            oldstr = oldstr.Substring(0, oldstr.Length - 1);
+
+            //update db and rtregion
+            if(_database.Query("UPDATE RtRegions SET Flags=@0 WHERE Id=@1", oldstr, rtregionId) == 0)
+                return false;
+            rt.Events = oldstr;
+            return true;
         }
 
         public bool SetGroup(int rtregionId, string group) {

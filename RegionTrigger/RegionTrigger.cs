@@ -33,11 +33,6 @@ namespace RegionTrigger
             RegionHooks.RegionEntered += OnRegionEntered;
             RegionHooks.RegionLeft += OnRegionLeft;
             RegionHooks.RegionDeleted += OnRegionDeleted;
-
-            //output for testing
-            for (int b = 1; b < 1 << 5; b <<= 1) {
-                Console.WriteLine(b);
-            }
         }
 
         protected override void Dispose(bool disposing) {
@@ -56,7 +51,7 @@ namespace RegionTrigger
 
         private void OnInitialize(EventArgs args) {
             // commands
-
+            Commands.ChatCommands.Add(new Command("regiontrigger.manage.define", DefineRtRegion, "defrt"));
             // database
             RtRegions = new RtRegionManager(TShock.DB);
         }
@@ -69,8 +64,15 @@ namespace RegionTrigger
             TShock.Players[args.Who].RemoveData(Rtdataname);
         }
 
-        private static void OnUpdate(EventArgs args) {
-            
+        /// <summary>LastCheck - Used to keep track of the last check for basically all time based checks.</summary>
+		private DateTime _lastCheck = DateTime.UtcNow;
+
+        private void OnUpdate(EventArgs args) {
+            //call these every second, not every update
+            if((DateTime.UtcNow - _lastCheck).TotalSeconds >= 1) {
+                OnSecondUpdate();
+                _lastCheck = DateTime.UtcNow;
+            }
         }
 
         private void OnRegionDeleted(RegionHooks.RegionDeletedEventArgs args) {
@@ -78,13 +80,60 @@ namespace RegionTrigger
         }
 
         private void OnRegionLeft(RegionHooks.RegionLeftEventArgs args) {
-            args.Player.SendInfoMessage("You have left region {0}", args.Region.Name);
+            var rt = RtRegions.GetRtRegionByRegionId(args.Region.ID);
+            if(rt == null)
+                return;
+
+            if(rt.HasEvent(Events.EnterMsg)) {
+                if(string.IsNullOrWhiteSpace(rt.EnterMsg))
+                    args.Player.SendInfoMessage("You have left region {0}", args.Region.Name);
+                else
+                    args.Player.SendMessage(rt.EnterMsg, Color.White);
+            }
         }
 
         private void OnRegionEntered(RegionHooks.RegionEnteredEventArgs args) {
-            args.Player.SendInfoMessage("You have entered region {0}", args.Region.Name);
+            var rt = RtRegions.GetRtRegionByRegionId(args.Region.ID);
+            if (rt == null)
+                return;
 
+            if (rt.HasEvent(Events.EnterMsg)) {
+                if(string.IsNullOrWhiteSpace(rt.EnterMsg))
+                    args.Player.SendInfoMessage("You have entered region {0}", args.Region.Name);
+                else
+                    args.Player.SendMessage(rt.EnterMsg, Color.White);
+            }
 
+            if (rt.HasEvent(Events.Message) && !string.IsNullOrWhiteSpace(rt.Message) && rt.MsgInterval == 0) {
+                args.Player.SendInfoMessage(rt.Message, args.Region.Name);
+            }
+
+        }
+
+        /// <summary>OnSecondUpdate - Called effectively every second for all time based checks.</summary>
+        private void OnSecondUpdate() {
+            foreach(var ply in TShock.Players.Where(p => p != null && p.Active)) {
+                if(ply.CurrentRegion == null)
+                    return;
+
+                var rt = RtRegions.GetRtRegionByRegionId(ply.CurrentRegion.ID);
+                var dt = ply.GetData<RtPlayer>(Rtdataname);
+                if(rt == null || dt == null)
+                    return;
+                
+
+                if(rt.HasEvent(Events.Message) && !string.IsNullOrWhiteSpace(rt.Message) && rt.MsgInterval != 0) {
+                    
+                    if (dt.MsgCd < rt.MsgInterval) {
+                        dt.MsgCd++;
+                        
+                    }
+                    else {
+                        ply.SendInfoMessage(rt.Message);
+                        dt.MsgCd = 0;
+                    }
+                }
+            }
         }
 
         private void DefineRtRegion(CommandArgs args) {
@@ -92,6 +141,7 @@ namespace RegionTrigger
             if (args.Parameters.Count == 0 || args.Parameters.Count > 2) {
                 args.Player.SendErrorMessage("Invaild syntax! Proper syntax: /defrt <Region name> [flags...]");
                 args.Player.SendErrorMessage("Use {0} to get available events.",TShock.Utils.ColorTag("/setrt events", Color.Cyan));
+                return;
             }
 
             string regionName = args.Parameters[0];
@@ -107,6 +157,7 @@ namespace RegionTrigger
             if (RtRegions.GetRtRegionByRegionId(region.ID) != null) {
                 args.Player.SendErrorMessage("RtRegion already exists!");
                 args.Player.SendErrorMessage("Use {0} to set events for regions.", TShock.Utils.ColorTag("/setrt add/set <RtRegion name> <flags>", Color.Cyan));
+                return;
             }
 
             // todo: check flags

@@ -7,8 +7,7 @@ using TShockAPI.DB;
 
 namespace RegionTrigger {
     public class RtPlayer {
-        public Region InRegion;
-        public int WarningCd;
+        public int MsgCd = 0;
 
     }
 }
