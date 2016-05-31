@@ -83,6 +83,13 @@ namespace RegionTrigger {
             var rt = RtRegions.GetRtRegionByRegionId(args.Region.ID);
             if(rt == null)
                 return;
+            var dt = args.Player.GetData<RtPlayer>(Rtdataname);
+            if(dt == null) {
+#if DEBUG
+                TShock.Log.ConsoleError("RTPDATA of Player {0} is null!", args.Player.Name);
+#endif
+                return;
+            }
 
             if(rt.HasEvent(Events.EnterMsg)) {
                 if(string.IsNullOrWhiteSpace(rt.EnterMsg))
@@ -90,12 +97,34 @@ namespace RegionTrigger {
                 else
                     args.Player.SendMessage(rt.EnterMsg, Color.White);
             }
+
+            if(rt.HasEvent(Events.TempGroup) && args.Player.tempGroup != null && args.Player.tempGroup == rt.TempGroup) {
+                args.Player.tempGroup = null;
+                args.Player.SendInfoMessage("You are no longer in group {0}.", rt.TempGroup.Name);
+            }
+
+            if(rt.HasEvent(Events.Godmode)) {
+                args.Player.GodMode = false;
+                args.Player.SendInfoMessage("You are no longer in godmode!");
+            }
+
+            if(rt.HasEvent(Events.Pvp) && !args.Player.HasPermission("regiontrigger.bypass.pvp")) {
+                dt.Pvp = false;
+                args.Player.SendInfoMessage("You can toggle your PVP status now.");
+            }
         }
 
         private void OnRegionEntered(RegionHooks.RegionEnteredEventArgs args) {
             var rt = RtRegions.GetRtRegionByRegionId(args.Region.ID);
             if(rt == null)
                 return;
+            var dt = args.Player.GetData<RtPlayer>(Rtdataname);
+            if(dt == null) {
+#if DEBUG
+                TShock.Log.ConsoleError("RTPDATA of Player {0} is null!", args.Player.Name);
+#endif
+                return;
+            }
 
             if(rt.HasEvent(Events.EnterMsg)) {
                 if(string.IsNullOrWhiteSpace(rt.EnterMsg))
@@ -108,6 +137,33 @@ namespace RegionTrigger {
                 args.Player.SendInfoMessage(rt.Message, args.Region.Name);
             }
 
+            if(rt.HasEvent(Events.TempGroup) && rt.TempGroup != null && !args.Player.HasPermission("regiontrigger.bypass.tempgroup")) {
+                if(rt.TempGroup == null)
+                    ; // todo: send warning msg to the console
+                args.Player.tempGroup = rt.TempGroup;
+                args.Player.SendInfoMessage("Your group has been changed to {0} in this region.", rt.TempGroup.Name);
+            }
+
+            if(rt.HasEvent(Events.Kill) && !args.Player.HasPermission("regiontrigger.bypass.kill")) {
+                args.Player.DamagePlayer(9999);
+                args.Player.SendInfoMessage("You were killed by this region!");
+            }
+
+            if(rt.HasEvent(Events.Godmode)) {
+                args.Player.GodMode = true;
+                args.Player.SendInfoMessage("You are now in godmode!");
+            }
+
+            if(rt.HasEvent(Events.Pvp) && !args.Player.TPlayer.hostile && !args.Player.HasPermission("regiontrigger.bypass.pvp")) {
+                dt.Pvp = true;
+                args.Player.TPlayer.hostile = true;
+                NetMessage.SendData(30, -1, args.Player.Index, "", args.Player.Index); // todo: validate that
+                args.Player.SendInfoMessage("Your PVP status is turned on by system!");
+            }
+
+            if(rt.HasEvent(Events.NoPvp)) {
+
+            }
         }
 
         /// <summary>OnSecondUpdate - Called effectively every second for all time based checks.</summary>
@@ -122,14 +178,17 @@ namespace RegionTrigger {
                     return;
 
                 if(rt.HasEvent(Events.Message) && !string.IsNullOrWhiteSpace(rt.Message) && rt.MsgInterval != 0) {
-
                     if(dt.MsgCd < rt.MsgInterval) {
                         dt.MsgCd++;
-
                     } else {
                         ply.SendInfoMessage(rt.Message);
                         dt.MsgCd = 0;
                     }
+                }
+
+                if(dt.Pvp && !ply.TPlayer.hostile) {
+                    ply.TPlayer.hostile = true;
+                    NetMessage.SendData(30, -1, ply.Index, "", ply.Index); // todo: validate that
                 }
             }
         }

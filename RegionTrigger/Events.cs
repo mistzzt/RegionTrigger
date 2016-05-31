@@ -8,14 +8,14 @@ namespace RegionTrigger {
         public static readonly string EnterMsg = "entermsg"; // ok
         public static readonly string LeaveMsg = "leavemsg"; // ok
         public static readonly string Message = "message"; // ok
-        public static readonly string TempGroup = "tempgroup";
+        public static readonly string TempGroup = "tempgroup"; // ok
         public static readonly string Itemban = "itemban";
         public static readonly string Projban = "projban";
         public static readonly string Tileban = "tileban";
-        public static readonly string Kill = "kill";
-        public static readonly string Godmode = "godmode";
-        public static readonly string Pvp = "pvp";
-        public static readonly string NoPvp = "nopvp";
+        public static readonly string Kill = "kill"; // ok
+        public static readonly string Godmode = "godmode"; // ok
+        public static readonly string Pvp = "pvp"; // ok
+        public static readonly string NoPvp = "nopvp"; // ok
         public static readonly string Private = "private";
         public static readonly string ThirdView = "thirdview";
 
