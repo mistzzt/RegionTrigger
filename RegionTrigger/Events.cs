@@ -4,9 +4,9 @@ using System.ComponentModel;
 using System.Linq;
 
 namespace RegionTrigger {
-    class Events {
+	class Events {
 		[Description("Sends player a specific message when entering regions.")]
-        public static readonly string EnterMsg = "entermsg"; // ok
+		public static readonly string EnterMsg = "entermsg"; // ok
 
 		[Description("Sends player a specific message when leaving regions.")]
 		public static readonly string LeaveMsg = "leavemsg"; // ok
@@ -25,7 +25,7 @@ namespace RegionTrigger {
 
 		[Description("Disallows players in specific regions from using banned tiles.")]
 		public static readonly string Tileban = "tileban";
-		
+
 		[Description("Kills players in regions when they enter.")]
 		public static readonly string Kill = "kill"; // ok
 
@@ -39,31 +39,31 @@ namespace RegionTrigger {
 		public static readonly string NoPvp = "nopvp"; // ok
 
 		[Description("Disallows players from entering specific regions.")]
-        public static readonly string Private = "private";
+		public static readonly string Private = "private";
 
 		[Description("Changes players' prefix when they are in regions.")]
-        public static readonly string ThirdView = "thirdview";
+		public static readonly string ThirdView = "thirdview";
 
-        public static List<string> EventsList = new List<string>();
-        public static Dictionary<string, string> EventsDescriptions = new Dictionary<string, string>();
+		public static List<string> EventsList = new List<string>();
+		public static Dictionary<string, string> EventsDescriptions = new Dictionary<string, string>();
 
-        static Events() {
-            Type t = typeof(Events);
+		static Events() {
+			Type t = typeof(Events);
 
-            foreach(var fieldInfo in t.GetFields()
-                .Where(f => f.IsPublic && f.FieldType == typeof(string))
-                .OrderBy(f => f.Name)) {
+			foreach(var fieldInfo in t.GetFields()
+				.Where(f => f.IsPublic && f.FieldType == typeof(string))
+				.OrderBy(f => f.Name)) {
 
-                EventsList.Add((string)fieldInfo.GetValue(null));
+				EventsList.Add((string)fieldInfo.GetValue(null));
 
-                var descattr =
-                    fieldInfo.GetCustomAttributes(false).FirstOrDefault(o => o is DescriptionAttribute) as DescriptionAttribute;
-                var desc = !string.IsNullOrWhiteSpace(descattr?.Description) ? descattr.Description : "None";
-                EventsDescriptions.Add(fieldInfo.Name, desc);
-            }
-        }
+				var descattr =
+					fieldInfo.GetCustomAttributes(false).FirstOrDefault(o => o is DescriptionAttribute) as DescriptionAttribute;
+				var desc = !string.IsNullOrWhiteSpace(descattr?.Description) ? descattr.Description : "None";
+				EventsDescriptions.Add(fieldInfo.Name, desc);
+			}
+		}
 
-        internal static bool Contains(string @event)
-            => EventsList.Contains(@event);
-    }
+		internal static bool Contains(string @event)
+			=> EventsList.Contains(@event);
+	}
 }
