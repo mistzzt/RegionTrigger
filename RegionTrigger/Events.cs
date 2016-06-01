@@ -5,18 +5,43 @@ using System.Linq;
 
 namespace RegionTrigger {
     class Events {
+		[Description("Sends player a specific message when entering regions.")]
         public static readonly string EnterMsg = "entermsg"; // ok
-        public static readonly string LeaveMsg = "leavemsg"; // ok
-        public static readonly string Message = "message"; // ok
-        public static readonly string TempGroup = "tempgroup"; // ok
-        public static readonly string Itemban = "itemban";
-        public static readonly string Projban = "projban";
-        public static readonly string Tileban = "tileban";
-        public static readonly string Kill = "kill"; // ok
-        public static readonly string Godmode = "godmode"; // ok
-        public static readonly string Pvp = "pvp"; // ok
-        public static readonly string NoPvp = "nopvp"; // ok
+
+		[Description("Sends player a specific message when leaving regions.")]
+		public static readonly string LeaveMsg = "leavemsg"; // ok
+
+		[Description("Sends player in regions a specific message.")]
+		public static readonly string Message = "message"; // ok
+
+		[Description("Alters players' tempgroups when they are in regions.")]
+		public static readonly string TempGroup = "tempgroup"; // ok
+
+		[Description("Disallows players in specific regions from using banned items.")]
+		public static readonly string Itemban = "itemban";
+
+		[Description("Disallows players in specific regions from using banned projectiles.")]
+		public static readonly string Projban = "projban";
+
+		[Description("Disallows players in specific regions from using banned tiles.")]
+		public static readonly string Tileban = "tileban";
+		
+		[Description("Kills players in regions when they enter.")]
+		public static readonly string Kill = "kill"; // ok
+
+		[Description("Turns players' godmode on when they are in regions.")]
+		public static readonly string Godmode = "godmode"; // ok
+
+		[Description("Turns players' PVP status on when they are in regions.")]
+		public static readonly string Pvp = "pvp"; // ok
+
+		[Description("Disallows players from enabling their pvp mode.")]
+		public static readonly string NoPvp = "nopvp"; // ok
+
+		[Description("Disallows players without permissions from entering specific regions.")]
         public static readonly string Private = "private";
+
+		[Description("Changes players' prefix when they are in regions.")]
         public static readonly string ThirdView = "thirdview";
 
         public static List<string> EventsList = new List<string>();
