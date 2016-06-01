@@ -38,7 +38,7 @@ namespace RegionTrigger {
 		[Description("Disallows players from enabling their pvp mode.")]
 		public static readonly string NoPvp = "nopvp"; // ok
 
-		[Description("Disallows players without permissions from entering specific regions.")]
+		[Description("Disallows players from entering specific regions.")]
         public static readonly string Private = "private";
 
 		[Description("Changes players' prefix when they are in regions.")]

@@ -229,33 +229,53 @@ namespace RegionTrigger {
                 case "events":
                     #region Event
                     string cmd = args.Parameters.Count == 1 ? "listevents" : args.Parameters[1].ToLower(); // add del <region name> listevents
-                    switch(cmd) {
-                        case "listevents":
-                            #region ListEvents
-                            int pageNumber;
-                            if(!PaginationTools.TryParsePageNumber(args.Parameters, 2, args.Player, out pageNumber))
-                                return;
+		            switch (cmd) {
+			            case "add":
+							#region Add
 
-                            PaginationTools.SendPage(args.Player, pageNumber, Events.EventsDescriptions.Select(kvp => $"{kvp.Key} -- {kvp.Value}").ToList(),
-                                new PaginationTools.Settings {
-                                    HeaderFormat = "Available events in RtRegions ({0}/{1}):",
-                                    FooterFormat = "Type {0}setrt event listevents {{0}} for more events.".SFormat(Commands.Specifier)
-                                }
-                            );
-                            #endregion
-                            return;
-                        case "add":
-                            #region Add
-                            #endregion
-                            return;
-                        case "del":
-                            #region Delete
-                            #endregion
-                            return;
-                    }
-                    #endregion
-                    return;
-                case "projban":
+				            #endregion
+				            return;
+			            case "del":
+							#region Delete
+
+				            #endregion
+				            return;
+			            case "listevents":
+							#region ListEvents
+
+				            PaginationTools.SendPage(args.Player, 1,
+					            Events.EventsDescriptions.Select(kvp => $"{kvp.Key} -- {kvp.Value}").ToList(),
+					            new PaginationTools.Settings {
+						            HeaderFormat = "Available events of RegionTrigger ({0}/{1}):",
+						            FooterFormat = "Type {0}setrt event {{0}} for more events.".SFormat(Commands.Specifier)
+					            }
+					            );
+
+				            #endregion
+				            return;
+			            default:
+							#region ListEvent [page]
+				            if (cmd.All(char.IsDigit)) {
+					            int num;
+					            if (!PaginationTools.TryParsePageNumber(args.Parameters, 1, args.Player, out num))
+						            return;
+
+								PaginationTools.SendPage(args.Player, num,
+									Events.EventsDescriptions.Select(kvp => $"{kvp.Key} -- {kvp.Value}").ToList(),
+									new PaginationTools.Settings {
+										HeaderFormat = "Available events of RegionTrigger ({0}/{1}):",
+										FooterFormat = "Type {0}setrt event {{0}} for more events.".SFormat(Commands.Specifier)
+									}
+									);
+								return;
+							}
+				            args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /setrt event <add/del>/[page]");
+				            #endregion
+				            return;
+		            }
+					#endregion
+					return;
+	            case "projban":
                     #region ProjectileBan
                     if(args.Parameters.Count != 4) {
                         args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /setrt projban <add/del> <Region> <projectile ID>");
@@ -305,10 +325,10 @@ namespace RegionTrigger {
                             "event <Region> - Lists all events of a RtRegion.",
                             "event add <Region> <Events> - Adds specific events to a RtRegion.",
                             "event del <Region> <Events> - Deletes events of a RtRegion.",
-                            "projban add <Region> <projectile ID> - Disallows players in RtRegions from using a projectile.",
-                            "projban del <Region> <projectile ID> - Allows players in RtRegions to use a projectile.",
-                            "itemban add <Region> <Item ID/name> - Disallows players in RtRegions from using a item.",
-                            "itemban del <Region> <Item ID/name> - Allows players in RtRegions to use a item.",
+                            "projban add <Region> <proj ID> - Disallows players from using a projectile.",
+                            "projban del <Region> <proj ID> - Allows players to use a projectile.",
+                            "itemban add <Region> <item ID/name> - Disallows players from using a item.",
+                            "itemban del <Region> <item ID/name> - Allows players to use a item.",
                             "help [page] - Lists all available helps of this command.",
                             "list [page] - Lists all RtRegions."
                         };
