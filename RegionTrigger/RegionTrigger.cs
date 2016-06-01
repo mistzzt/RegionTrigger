@@ -236,10 +236,10 @@ namespace RegionTrigger {
                             if(!PaginationTools.TryParsePageNumber(args.Parameters, 2, args.Player, out pageNumber))
                                 return;
 
-                            PaginationTools.SendPage(args.Player, pageNumber, PaginationTools.BuildLinesFromTerms(Events.EventsDescriptions.Select(kvp => $"{kvp.Key} -- {kvp.Value}")),
+                            PaginationTools.SendPage(args.Player, pageNumber, Events.EventsDescriptions.Select(kvp => $"{kvp.Key} -- {kvp.Value}").ToList(),
                                 new PaginationTools.Settings {
                                     HeaderFormat = "Available events in RtRegions ({0}/{1}):",
-                                    FooterFormat = "Type {0}setrt listevents {{0}} for more events.".SFormat(Commands.Specifier)
+                                    FooterFormat = "Type {0}setrt event listevents {{0}} for more events.".SFormat(Commands.Specifier)
                                 }
                             );
                             #endregion
