@@ -5,6 +5,8 @@ using System.Linq;
 
 namespace RegionTrigger {
 	class Events {
+		public static readonly string None = "none";
+
 		[Description("Sends player a specific message when entering regions.")]
 		public static readonly string EnterMsg = "entermsg"; // ok
 
@@ -64,6 +66,6 @@ namespace RegionTrigger {
 		}
 
 		internal static bool Contains(string @event)
-			=> EventsList.Contains(@event);
+			=> @event != None && EventsList.Contains(@event);
 	}
 }
