@@ -66,6 +66,6 @@ namespace RegionTrigger {
 		}
 
 		internal static bool Contains(string @event)
-			=> @event != None && EventsList.Contains(@event);
+			=> !string.IsNullOrWhiteSpace(@event) && @event != None && EventsList.Contains(@event);
 	}
 }

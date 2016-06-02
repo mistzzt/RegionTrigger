@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using MySql.Data.MySqlClient;
 using Terraria;
 using TShockAPI;
@@ -24,16 +22,16 @@ namespace RegionTrigger {
 			var table = new SqlTable("RtRegions",
 									 new SqlColumn("Id", MySqlDbType.Int32) { Primary = true, AutoIncrement = true },
 									 new SqlColumn("RegionId", MySqlDbType.Int32) { Unique = true, NotNull = true },
-									 new SqlColumn("Flags", MySqlDbType.String),
+									 new SqlColumn("Flags", MySqlDbType.Text),
 									 new SqlColumn("GroupName", MySqlDbType.String, 32),
-									 new SqlColumn("EnterMsg", MySqlDbType.String),
-									 new SqlColumn("LeaveMsg", MySqlDbType.String),
+									 new SqlColumn("EnterMsg", MySqlDbType.Text),
+									 new SqlColumn("LeaveMsg", MySqlDbType.Text),
 									 new SqlColumn("Message", MySqlDbType.String, 20),
 									 new SqlColumn("MessageInterval", MySqlDbType.Int32),
 									 new SqlColumn("TempGroup", MySqlDbType.String, 32),
-									 new SqlColumn("Itembans", MySqlDbType.String),
-									 new SqlColumn("Projbans", MySqlDbType.String),
-									 new SqlColumn("Tilebans", MySqlDbType.String)
+									 new SqlColumn("Itembans", MySqlDbType.Text),
+									 new SqlColumn("Projbans", MySqlDbType.Text),
+									 new SqlColumn("Tilebans", MySqlDbType.Text)
 				);
 			var creator = new SqlTableCreator(db,
 											  db.GetSqlType() == SqlType.Sqlite
@@ -59,24 +57,48 @@ namespace RegionTrigger {
 						var entermsg = reader.Get<string>("EnterMsg");
 						var leavemsg = reader.Get<string>("LeaveMsg");
 						var msg = reader.Get<string>("Message");
-						var msgitv = reader.Get<int>("MessageInterval");
+						var msgitv = reader.Get<int?>("MessageInterval");
 						var tempgroupstr = reader.Get<string>("TempGroup");
 						var itemb = reader.Get<string>("Itembans");
 						var projb = reader.Get<string>("Projbans");
 						var tileb = reader.Get<string>("Tilebans");
 
+						Group group = TShock.Utils.GetGroup(groupstr),
+							temp = TShock.Utils.GetGroup(tempgroupstr);
+						List<int> itemblist = new List<int>(),
+							projblist = new List<int>(),
+							tileblist = new List<int>();
+
+						Regions.Add(new RtRegion(id, regionId) {
+							Events = flagstr,
+							Group = group,
+							EnterMsg = entermsg,
+							LeaveMsg = leavemsg,
+							Message = msg,
+							MsgInterval = msgitv ?? 0,
+							TempGroup = temp,
+							Itembans = itemblist,
+							Projbans = projblist,
+							Tilebans = tileblist
+						});
 					}
 				}
-			} catch {
-
+#if DEBUG
+				Console.WriteLine("[RegionTrigger] Successfully loaded {0}/{1} region(s).", Regions.Count, TShock.Regions.Regions.Count);
+#endif
+			} catch(Exception e) {
+				Debug.WriteLine(e);
+				Debugger.Break();
 			}
 		}
 
-		public bool AddRtRegion(int regionId, string flags = "None") {
+		public bool AddRtRegion(int regionId, string flags) {
+			if(Regions.Any(r => r.RegionId == regionId))
+				return false;
+
 			string query = "INSERT INTO RtRegions (RegionId, Flags) VALUES (@0, @1);";
-			// todo: check flags here or other place
 			try {
-				if(_database.Query(query, regionId, string.IsNullOrWhiteSpace(flags) ? "None" : flags) != 0)
+				if(_database.Query(query, regionId, string.IsNullOrWhiteSpace(flags) ? "none" : flags) != 0)
 					return true;
 				return false;
 			} catch(Exception e) {
@@ -91,7 +113,7 @@ namespace RegionTrigger {
 
 		public bool DeleteRtRegion(int rtregionid) {
 			try {
-				if(_database.Query("DELETE FROM RtRegions WHERE Id=@0", rtregionid) != 0 && Regions.RemoveAll(r => r.Id == rtregionid) != 0)
+				if(_database.Query("DELETE FROM RtRegions WHERE Id=@0", rtregionid) != 0 && Regions.RemoveAll(r => r.RegionId == rtregionid) != 0)
 					return true;
 			} catch(Exception e) {
 #if DEBUG
@@ -103,26 +125,22 @@ namespace RegionTrigger {
 			return false;
 		}
 
-		public bool AddFlags(int rtregionId, string flags = "None") {
+		public bool AddFlags(int rtregionId, string flags) {
 			RtRegion rt = GetRtRegionById(rtregionId);
 			if(rt == null)
 				return false;
-			if(flags == "None")
+			if(string.IsNullOrWhiteSpace(flags) || flags.ToLower() == Events.None)
 				return false;
 			// todo: it may be removed because in RtRegion.Events.Set the function will also validate events
 			var oldstr = rt.Events;
 			var newevt = flags.ToLower().Split(',');
-
 			if(oldstr.Length != 0)
 				oldstr += ',';
-			foreach(var en in newevt)
-				if(Events.Contains(en))
-					oldstr += $"{en},";
-				else {
-					TShock.Log.ConsoleError("[RTrigger] Invaild event in region {0}({1}): event \"{2}\" does not exist.", TShock.Regions.GetRegionByID(rtregionId).Name, rtregionId, en);
-				}
-			oldstr = oldstr.Substring(0, oldstr.Length - 1);
 
+			oldstr = newevt
+				.Where(en => !string.IsNullOrWhiteSpace(en) && Events.Contains(en) && !rt.EventsList.Contains(en))
+				.Aggregate(oldstr, (current, en) => current + $"{en},");
+			oldstr = oldstr.Substring(0, oldstr.Length - 1);
 			//update db and rtregion
 			if(_database.Query("UPDATE RtRegions SET Flags=@0 WHERE Id=@1", oldstr, rtregionId) == 0)
 				return false;
@@ -184,11 +202,9 @@ namespace RegionTrigger {
 			// update db
 			return false;
 		}
-		public RtRegion GetRtRegionById(int id) {
-			if(id < 0 || id >= Regions.Count)
-				return null;
-			return Regions[id];
-		}
+
+		public RtRegion GetRtRegionById(int id)
+			=> Regions.SingleOrDefault(rt => rt.Id == id);
 
 		public RtRegion GetRtRegionByRegionId(int regionId)
 			=> Regions.SingleOrDefault(rt => rt.RegionId == regionId);
