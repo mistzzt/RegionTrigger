@@ -98,7 +98,7 @@ namespace RegionTrigger {
 
 			string query = "INSERT INTO RtRegions (RegionId, Flags) VALUES (@0, @1);";
 			try {
-				if(_database.Query(query, regionId, string.IsNullOrWhiteSpace(flags) ? "none" : flags) != 0)
+				if(_database.Query(query, regionId, string.IsNullOrWhiteSpace(flags) ? Events.None : flags) != 0)
 					return true;
 				return false;
 			} catch(Exception e) {
@@ -111,11 +111,13 @@ namespace RegionTrigger {
 			}
 		}
 
-		public bool DeleteRtRegion(int rtregionid) {
+		public bool DeleteRtRegion(int regionId) {
 			try {
-				if(_database.Query("DELETE FROM RtRegions WHERE Id=@0", rtregionid) != 0 && Regions.RemoveAll(r => r.RegionId == rtregionid) != 0)
+				if (_database.Query("DELETE FROM RtRegions WHERE RegionId=@0", regionId) != 0 &&
+				    Regions.RemoveAll(r => r.RegionId == regionId) != 0)
 					return true;
-			} catch(Exception e) {
+			}
+			catch (Exception e) {
 #if DEBUG
 				Debug.WriteLine(e);
 				Debugger.Break();

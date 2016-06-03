@@ -21,7 +21,7 @@ namespace RegionTrigger {
 		public Group Group;
 		public Group TempGroup;
 		private readonly List<string> _events = new List<string>();
-		public IReadOnlyList<string> EventsList => _events.AsReadOnly(); 
+		public IReadOnlyList<string> EventsList => _events.AsReadOnly();
 
 		public string Events {
 			get {
