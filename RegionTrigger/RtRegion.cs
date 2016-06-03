@@ -1,9 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using TShockAPI;
 
 namespace RegionTrigger {
@@ -29,15 +25,9 @@ namespace RegionTrigger {
 			}
 			set {
 				_events.Clear();
-
 				var es = value.Trim().ToLower().Split(',');
-				for(int i = 0;i < es.Length;++i) {
-					var en = es[i].Trim();
-					if(global::RegionTrigger.Events.Contains(en))
-						_events.Add(en);
-					else
-						TShock.Log.ConsoleError("[RTrigger] Invaild event in region {0}({1}): event \"{2}\" does not exist.", TShock.Regions.GetRegionByID(RegionId).Name, RegionId, en);
-				}
+				foreach(var e in es.Where(e => !string.IsNullOrWhiteSpace(e)))
+					_events.Add(e.Trim());
 			}
 		}
 
