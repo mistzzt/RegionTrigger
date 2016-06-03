@@ -21,7 +21,8 @@ namespace RegionTrigger {
 		public RegionTrigger(Main game) : base(game) { }
 
 		public override void Initialize() {
-			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize);
+			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize, -10);
+			ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInit, -10);
 			ServerApi.Hooks.ServerJoin.Register(this, OnJoin);
 			ServerApi.Hooks.ServerLeave.Register(this, OnLeave);
 			ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
@@ -34,6 +35,7 @@ namespace RegionTrigger {
 		protected override void Dispose(bool disposing) {
 			if(disposing) {
 				ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
+				ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInit);
 				ServerApi.Hooks.ServerJoin.Deregister(this, OnJoin);
 				ServerApi.Hooks.ServerLeave.Deregister(this, OnLeave);
 				ServerApi.Hooks.GameUpdate.Deregister(this, OnUpdate);
@@ -46,11 +48,14 @@ namespace RegionTrigger {
 		}
 
 		private void OnInitialize(EventArgs args) {
-			// commands
 			Commands.ChatCommands.Add(new Command("regiontrigger.manage.define", DefineRtRegion, "defrt"));
 			Commands.ChatCommands.Add(new Command("regiontrigger.manage.set", SetRt, "setrt"));
-			// database
+
 			RtRegions = new RtRegionManager(TShock.DB);
+		}
+
+		private void OnPostInit(EventArgs args) {
+			RtRegions.Reload();
 		}
 
 		private static void OnJoin(JoinEventArgs args) {
@@ -61,11 +66,9 @@ namespace RegionTrigger {
 			TShock.Players[args.Who].RemoveData(Rtdataname);
 		}
 
-		/// <summary>LastCheck - Used to keep track of the last check for basically all time based checks.</summary>
 		private DateTime _lastCheck = DateTime.UtcNow;
 
 		private void OnUpdate(EventArgs args) {
-			//call these every second, not every update
 			if((DateTime.UtcNow - _lastCheck).TotalSeconds >= 1) {
 				OnSecondUpdate();
 				_lastCheck = DateTime.UtcNow;
@@ -73,7 +76,8 @@ namespace RegionTrigger {
 		}
 
 		private void OnRegionDeleted(RegionHooks.RegionDeletedEventArgs args) {
-
+			if(!RtRegions.DeleteRtRegion(args.Region.ID))
+				TShock.Log.ConsoleError("Failed to remove region '{0}'!", args.Region.Name);
 		}
 
 		private void OnRegionLeft(RegionHooks.RegionLeftEventArgs args) {
@@ -88,11 +92,11 @@ namespace RegionTrigger {
 				return;
 			}
 
-			if(rt.HasEvent(Events.EnterMsg)) {
-				if(string.IsNullOrWhiteSpace(rt.EnterMsg))
+			if(rt.HasEvent(Events.LeaveMsg)) {
+				if(string.IsNullOrWhiteSpace(rt.LeaveMsg))
 					args.Player.SendInfoMessage("You have left region {0}", args.Region.Name);
 				else
-					args.Player.SendMessage(rt.EnterMsg, Color.White);
+					args.Player.SendMessage(rt.LeaveMsg, Color.White);
 			}
 
 			if(rt.HasEvent(Events.TempGroup) && args.Player.tempGroup != null && args.Player.tempGroup == rt.TempGroup) {
@@ -130,13 +134,15 @@ namespace RegionTrigger {
 					args.Player.SendMessage(rt.EnterMsg, Color.White);
 			}
 
-			if(rt.HasEvent(Events.Message) && !string.IsNullOrWhiteSpace(rt.Message) && rt.MsgInterval == 0) {
+			if(rt.HasEvent(Events.Message) && !string.IsNullOrWhiteSpace(rt.Message)) {
 				args.Player.SendInfoMessage(rt.Message, args.Region.Name);
 			}
 
 			if(rt.HasEvent(Events.TempGroup) && rt.TempGroup != null && !args.Player.HasPermission("regiontrigger.bypass.tempgroup")) {
-				if(rt.TempGroup == null)
-					; // todo: send warning msg to the console
+				if(rt.TempGroup == null) {
+					TShock.Log.ConsoleError("TempGroup in region '{0}' is not valid", args.Region.Name);
+					return;
+				}
 				args.Player.tempGroup = rt.TempGroup;
 				args.Player.SendInfoMessage("Your group has been changed to {0} in this region.", rt.TempGroup.Name);
 			}
@@ -151,19 +157,36 @@ namespace RegionTrigger {
 				args.Player.SendInfoMessage("You are now in godmode!");
 			}
 
-			if(rt.HasEvent(Events.Pvp) && !args.Player.TPlayer.hostile && !args.Player.HasPermission("regiontrigger.bypass.pvp")) {
+			if(rt.HasEvent(Events.Pvp) && !args.Player.HasPermission("regiontrigger.bypass.pvp")) {
 				dt.Pvp = true;
-				args.Player.TPlayer.hostile = true;
-				NetMessage.SendData(30, -1, args.Player.Index, "", args.Player.Index); // todo: validate that
-				args.Player.SendInfoMessage("Your PVP status is turned on by system!");
+				if(!args.Player.TPlayer.hostile) {
+					args.Player.TPlayer.hostile = true;
+					NetMessage.SendData(30, -1, args.Player.Index, "", args.Player.Index); // todo: validate that
+					args.Player.SendInfoMessage("Your PVP status is enabled in this region!");
+				}
 			}
 
-			if(rt.HasEvent(Events.NoPvp)) {
+			if(rt.HasEvent(Events.NoPvp) && !args.Player.HasPermission("regiontrigger.bypass.nopvp")) {
+				dt.Pvp = false;
+				dt.NoPvp = true;
+				if(args.Player.TPlayer.hostile) {
+					args.Player.TPlayer.hostile = false;
+					args.Player.SendInfoMessage("You can't enable PVP in this region!");
+				}
+			}
 
+			if(rt.HasEvent(Events.Private) && !args.Player.HasPermission("regiontrigger.bypass.private")) {
+				if(rt.Group == null) {
+					args.Player.Teleport(args.Player.LastNetPosition.X, args.Player.LastNetPosition.Y);
+				} else if(args.Player.Group != rt.Group) {
+					args.Player.Teleport(args.Player.LastNetPosition.X, args.Player.LastNetPosition.Y);
+				} else {
+					return;
+				}
+				args.Player.SendErrorMessage("You don't have permission to enter that region.");
 			}
 		}
 
-		/// <summary>OnSecondUpdate - Called effectively every second for all time based checks.</summary>
 		private void OnSecondUpdate() {
 			foreach(var ply in TShock.Players.Where(p => p != null && p.Active)) {
 				if(ply.CurrentRegion == null)
@@ -185,7 +208,13 @@ namespace RegionTrigger {
 
 				if(dt.Pvp && !ply.TPlayer.hostile) {
 					ply.TPlayer.hostile = true;
+					ply.SendErrorMessage("Forced PVP mode is enabled in this region! You can't change your PVP status.");
 					NetMessage.SendData(30, -1, ply.Index, "", ply.Index); // todo: validate that
+				}
+
+				if(dt.NoPvp && ply.TPlayer.hostile) {
+					ply.TPlayer.hostile = false;
+					ply.SendErrorMessage("You can't pvp in this region!");
 				}
 			}
 		}
@@ -199,8 +228,8 @@ namespace RegionTrigger {
 
 			string regionName = args.Parameters[0];
 			string flags = args.Parameters.Count == 1 || string.IsNullOrWhiteSpace(args.Parameters[1])
-				? "none"
-				: args.Parameters[1];
+				? Events.None
+				: args.Parameters[1].ToLower();
 
 			var region = TShock.Regions.GetRegionByName(regionName);
 			if(region == null) {
@@ -213,9 +242,24 @@ namespace RegionTrigger {
 				return;
 			}
 
+			var events = flags.Split(',');
+			var valid = new List<string>();
+			var invalid = new List<string>();
+
+			events.ForEach(txt => {
+				var e = txt.Trim();
+				if(!Events.Contains(e))
+					invalid.Add(e);
+				else
+					valid.Add(e);
+			});
+
+			string validEvents = string.Join(",", valid);
 			// todo: check flags
-			if(RtRegions.AddRtRegion(region.ID, flags)) {
+			if(RtRegions.AddRtRegion(region.ID, validEvents)) {
 				args.Player.SendSuccessMessage("RtRegion {0} was defined successfully!", TShock.Utils.ColorTag(region.Name, Color.Cyan));
+				if(invalid.Count > 0)
+					args.Player.SendErrorMessage("These invalid events wern't added to this region: {0}", string.Join(", ", invalid));
 			}
 		}
 
@@ -229,7 +273,49 @@ namespace RegionTrigger {
 					switch(cmd) {
 						case "add":
 							#region Add
+							if(args.Parameters.Count != 4) {
+								args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /setrt add <region name> <event(s)>");
+								return;
+							}
+							if(string.IsNullOrWhiteSpace(args.Parameters[2]) || string.IsNullOrWhiteSpace(args.Parameters[3])) {
+								args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /setrt add <region name> <event(s)>");
+								return;
+							}
 
+							string rtname = args.Parameters[2].Trim();
+							string[] estr = args.Parameters[3].ToLower().Trim().Split(',');
+
+							var region = TShock.Regions.GetRegionByName(rtname);
+							if(region == null) {
+								args.Player.SendErrorMessage("Cannot find region named \"{0}\"!", rtname);
+								return;
+							}
+							var rtregion = RtRegions.GetRtRegionByRegionId(region.ID);
+							if(rtregion == null) {
+								args.Player.SendErrorMessage("This region has not defined! Use {0} to define that.", TShock.Utils.ColorTag($"/defrt {region.Name}", Color.Cyan));
+								return;
+							}
+
+							var valid = new List<string>();
+							var invalid = new List<string>();
+
+							estr.ForEach(str => {
+								var s = str.Trim();
+								if(Events.Contains(s))
+									valid.Add(s);
+								else
+									invalid.Add(s);
+							});
+
+							if(valid.Count > 0) {
+								if(!RtRegions.AddFlags(rtregion.Id, string.Join(",", valid))) {
+									args.Player.SendErrorMessage("Add failed: database error");
+									return;
+								}
+								args.Player.SendSuccessMessage("Events have been added to region successfully!");
+							}
+							if(invalid.Count > 0)
+								args.Player.SendErrorMessage("These invalid events wern't added to this region: {0}", string.Join(", ", invalid));
 							#endregion
 							return;
 						case "del":
@@ -310,6 +396,11 @@ namespace RegionTrigger {
 					}
 					#endregion
 					return;
+				case "reload":
+					#region Reload
+					RtRegions.Reload();
+					#endregion
+					return;
 				case "help":
 					#region Help
 					{
@@ -320,15 +411,16 @@ namespace RegionTrigger {
 						var lines = new List<string>
 						{
 							"event [page] - Lists all available events.",
-							"event <Region> - Lists all events of a RtRegion.",
 							"event add <Region> <Events> - Adds specific events to a RtRegion.",
 							"event del <Region> <Events> - Deletes events of a RtRegion.",
+							"event show <Region> - Lists all events of a RtRegion.",
 							"projban add <Region> <proj ID> - Disallows players from using a projectile.",
 							"projban del <Region> <proj ID> - Allows players to use a projectile.",
 							"itemban add <Region> <item ID/name> - Disallows players from using a item.",
 							"itemban del <Region> <item ID/name> - Allows players to use a item.",
 							"help [page] - Lists all available helps of this command.",
-							"list [page] - Lists all RtRegions."
+							"list [page] - Lists all RtRegions.",
+							"reload -- Reloads data in database.",
 						};
 
 						PaginationTools.SendPage(args.Player, pageNumber, lines,
@@ -339,6 +431,9 @@ namespace RegionTrigger {
 						);
 					}
 					#endregion
+					return;
+				default:
+					args.Player.SendErrorMessage("Invalid syntax! Type /setrt help to get a list of sub-commands.");
 					return;
 			}
 		}

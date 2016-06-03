@@ -42,7 +42,7 @@ namespace RegionTrigger {
 		public static readonly string NoPvp = "nopvp"; // ok
 
 		[Description("Disallows players from entering specific regions.")]
-		public static readonly string Private = "private";
+		public static readonly string Private = "private"; // ok
 
 		[Description("Changes players' prefix when they are in regions.")]
 		public static readonly string ThirdView = "thirdview";

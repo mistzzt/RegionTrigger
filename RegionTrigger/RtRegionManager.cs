@@ -113,11 +113,10 @@ namespace RegionTrigger {
 
 		public bool DeleteRtRegion(int regionId) {
 			try {
-				if (_database.Query("DELETE FROM RtRegions WHERE RegionId=@0", regionId) != 0 &&
-				    Regions.RemoveAll(r => r.RegionId == regionId) != 0)
+				if(_database.Query("DELETE FROM RtRegions WHERE RegionId=@0", regionId) != 0 &&
+					Regions.RemoveAll(r => r.RegionId == regionId) != 0)
 					return true;
-			}
-			catch (Exception e) {
+			} catch(Exception e) {
 #if DEBUG
 				Debug.WriteLine(e);
 				Debugger.Break();
@@ -133,7 +132,7 @@ namespace RegionTrigger {
 				return false;
 			if(string.IsNullOrWhiteSpace(flags) || flags.ToLower() == Events.None)
 				return false;
-			// todo: it may be removed because in RtRegion.Events.Set the function will also validate events
+
 			var oldstr = rt.Events;
 			var newevt = flags.ToLower().Split(',');
 			if(oldstr.Length != 0)
@@ -143,7 +142,7 @@ namespace RegionTrigger {
 				.Where(en => !string.IsNullOrWhiteSpace(en) && Events.Contains(en) && !rt.EventsList.Contains(en))
 				.Aggregate(oldstr, (current, en) => current + $"{en},");
 			oldstr = oldstr.Substring(0, oldstr.Length - 1);
-			//update db and rtregion
+
 			if(_database.Query("UPDATE RtRegions SET Flags=@0 WHERE Id=@1", oldstr, rtregionId) == 0)
 				return false;
 			rt.Events = oldstr;
