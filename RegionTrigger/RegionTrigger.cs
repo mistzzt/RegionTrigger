@@ -237,8 +237,8 @@ namespace RegionTrigger {
 				return;
 			}
 			if(RtRegions.GetRtRegionByRegionId(region.ID) != null) {
-				args.Player.SendErrorMessage("RtRegion already exists!");
-				args.Player.SendErrorMessage("Use {0} to set events for regions.", TShock.Utils.ColorTag("/setrt add/set <RtRegion name> <flags>", Color.Cyan));
+				args.Player.SendErrorMessage("This region has been already defined!");
+				args.Player.SendErrorMessage("Use {0} to set events for regions.", TShock.Utils.ColorTag("/setrt event <add/del> <region name> <flags>", Color.Cyan));
 				return;
 			}
 
@@ -255,12 +255,14 @@ namespace RegionTrigger {
 			});
 
 			string validEvents = string.Join(",", valid);
-			// todo: check flags
+
 			if(RtRegions.AddRtRegion(region.ID, validEvents)) {
 				args.Player.SendSuccessMessage("RtRegion {0} was defined successfully!", TShock.Utils.ColorTag(region.Name, Color.Cyan));
 				if(invalid.Count > 0)
 					args.Player.SendErrorMessage("These invalid events wern't added to this region: {0}", string.Join(", ", invalid));
+				return;
 			}
+			args.Player.SendErrorMessage("Defining process failed. Check logs for more information.");
 		}
 
 		private void SetRt(CommandArgs args) {
@@ -269,16 +271,16 @@ namespace RegionTrigger {
 				case "event":
 				case "events":
 					#region Event
-					string cmd = args.Parameters.Count == 1 ? "listevents" : args.Parameters[1].ToLower(); // add del <region name> listevents
+					string cmd = args.Parameters.Count == 1 ? "listevents" : args.Parameters[1].ToLower();
 					switch(cmd) {
 						case "add":
 							#region Add
 							if(args.Parameters.Count != 4) {
-								args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /setrt add <region name> <event(s)>");
+								args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /setrt event add <region name> <event(s)>");
 								return;
 							}
 							if(string.IsNullOrWhiteSpace(args.Parameters[2]) || string.IsNullOrWhiteSpace(args.Parameters[3])) {
-								args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /setrt add <region name> <event(s)>");
+								args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /setrt event add <region name> <event(s)>");
 								return;
 							}
 
@@ -292,7 +294,7 @@ namespace RegionTrigger {
 							}
 							var rtregion = RtRegions.GetRtRegionByRegionId(region.ID);
 							if(rtregion == null) {
-								args.Player.SendErrorMessage("This region has not defined! Use {0} to define that.", TShock.Utils.ColorTag($"/defrt {region.Name}", Color.Cyan));
+								args.Player.SendErrorMessage("The region is not defined! Use {0} to define that.", TShock.Utils.ColorTag($"/defrt {region.Name}", Color.Cyan));
 								return;
 							}
 
@@ -315,7 +317,7 @@ namespace RegionTrigger {
 								args.Player.SendSuccessMessage("Events have been added to region successfully!");
 							}
 							if(invalid.Count > 0)
-								args.Player.SendErrorMessage("These invalid events wern't added to this region: {0}", string.Join(", ", invalid));
+								args.Player.SendErrorMessage("Invalid events weren't added: {0}", string.Join(", ", invalid));
 							#endregion
 							return;
 						case "del":
@@ -420,7 +422,7 @@ namespace RegionTrigger {
 							"itemban del <Region> <item ID/name> - Allows players to use a item.",
 							"help [page] - Lists all available helps of this command.",
 							"list [page] - Lists all RtRegions.",
-							"reload -- Reloads data in database.",
+							"reload - Reloads data in database.",
 						};
 
 						PaginationTools.SendPage(args.Player, pageNumber, lines,
