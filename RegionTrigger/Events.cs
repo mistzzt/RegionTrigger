@@ -5,7 +5,8 @@ using System.Linq;
 
 namespace RegionTrigger {
 	class Events {
-		public static readonly string None = "none";
+		[Description("Represents a event that does nothing. It can't be added to a region.")]
+		public static readonly string None = "none"; // ok
 
 		[Description("Sends player a specific message when entering regions.")]
 		public static readonly string EnterMsg = "entermsg"; // ok
