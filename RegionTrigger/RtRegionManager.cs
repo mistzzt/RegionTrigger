@@ -10,15 +10,14 @@ using TShockAPI.DB;
 
 namespace RegionTrigger {
 	public class RtRegionManager {
-		/// <summary>
-		/// The list of regions.
-		/// </summary>
+
 		public readonly List<RtRegion> Regions = new List<RtRegion>();
 
 		private readonly IDbConnection _database;
 
 		internal RtRegionManager(IDbConnection db) {
 			_database = db;
+
 			var table = new SqlTable("RtRegions",
 									 new SqlColumn("Id", MySqlDbType.Int32) { Primary = true, AutoIncrement = true },
 									 new SqlColumn("RegionId", MySqlDbType.Int32) { Unique = true, NotNull = true },
@@ -91,19 +90,28 @@ namespace RegionTrigger {
 			}
 		}
 
-		public void AddRtRegion(string regionName, string flags) {
+		public void AddRtRegion(string regionName, string events) {
 			if(Regions.Any(r => r.Region.Name == regionName))
-				throw new Exception("Region is already defined!");
+				throw new RegionDefinedException(regionName);
 
 			var region = TShock.Regions.GetRegionByName(regionName);
 			if(region == null)
 				throw new Exception($"Couldn't find region named '{regionName}'!");
-			
+
+			var rt = new RtRegion(-1, region.ID) {
+				Events = string.IsNullOrWhiteSpace(events) ? Events.None : events.Trim().ToLower()
+			};
+
 			string query = "INSERT INTO RtRegions (RegionId, Flags) VALUES (@0, @1);";
 			try {
-				if(_database.Query(query, region.ID, string.IsNullOrWhiteSpace(flags) ? Events.None : flags) != 0)
-					return;
-				throw new Exception("Database error: No affected rows.");
+				_database.Query(query, region.ID, rt.Events);
+				using(var result = _database.QueryReader("SELECT Id FROM RtRegions WHERE RegionId = @0")) {
+					if(result.Read()) {
+						rt.Id = result.Get<int>("Id");
+						Regions.Add(rt);
+					} else
+						throw new Exception("Database error: No affected rows.");
+				}
 			} catch(Exception e) {
 				TShock.Log.Error(e.ToString());
 				throw new Exception("Database error! Check logs for more information.", e);
@@ -227,6 +235,14 @@ namespace RegionTrigger {
 				}
 			}
 			return ret;
+		}
+
+		public class RegionDefinedException : Exception {
+			public readonly string RegionName;
+
+			public RegionDefinedException(string name) : base($"Region '{name}' was already defined!") {
+				RegionName = name;
+			}
 		}
 	}
 }
