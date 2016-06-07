@@ -56,7 +56,6 @@ namespace RegionTrigger {
 
 		private void OnInitialize(EventArgs args) {
 			Commands.ChatCommands.Add(new Command("regiontrigger.manage.define", DefineRtRegion, "defrt"));
-			Commands.ChatCommands.Add(new Command("regiontrigger.manage.set", SetRt, "setrt"));
 
 			RtRegions = new RtRegionManager(TShock.DB);
 		}
