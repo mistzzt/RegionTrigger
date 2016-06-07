@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using TShockAPI;
 
 namespace RegionTrigger {
 	class Events {
@@ -21,13 +22,13 @@ namespace RegionTrigger {
 		public static readonly string TempGroup = "tempgroup"; // ok
 
 		[Description("Disallows players in specific regions from using banned items.")]
-		public static readonly string Itemban = "itemban";
+		public static readonly string Itemban = "itemban"; // ok
 
 		[Description("Disallows players in specific regions from using banned projectiles.")]
-		public static readonly string Projban = "projban";
+		public static readonly string Projban = "projban"; // ok
 
 		[Description("Disallows players in specific regions from using banned tiles.")]
-		public static readonly string Tileban = "tileban";
+		public static readonly string Tileban = "tileban"; // ok
 
 		[Description("Kills players in regions when they enter.")]
 		public static readonly string Kill = "kill"; // ok
@@ -35,7 +36,7 @@ namespace RegionTrigger {
 		[Description("Turns players' godmode on when they are in regions.")]
 		public static readonly string Godmode = "godmode"; // ok
 
-		[Description("Turns players' PVP status on when they are in regions.")]
+		[Description("Turns players' PvP status on when they are in regions.")]
 		public static readonly string Pvp = "pvp"; // ok
 
 		[Description("Disallows players from enabling their pvp mode.")]
@@ -68,5 +69,34 @@ namespace RegionTrigger {
 
 		internal static bool Contains(string @event)
 			=> !string.IsNullOrWhiteSpace(@event) && @event != None && EventsList.Contains(@event);
+
+		/// <summary>
+		/// Checks given events
+		/// </summary>
+		/// <param name="events">Events splited by ','</param>
+		/// <returns>T1: Valid events & T2: Invalid events</returns>
+		internal static Tuple<string,string> ValidateEvents(string events) {
+			if(string.IsNullOrWhiteSpace(events))
+				return new Tuple<string, string>(None, null);
+			
+			List<string> valid = new List<string>(),
+				invalid = new List<string>();
+			var splitedEvents = events.Trim().ToLower().Split(',');
+
+			splitedEvents
+				.Where(e => !string.IsNullOrWhiteSpace(e))
+				.ForEach(e => {
+					if(Contains(e))
+						valid.Add(e);
+					else
+						invalid.Add(e);
+				});
+			if(valid.Count == 0)
+				valid.Add(None);
+
+			var item1 = string.Join(",", valid);
+			var item2 = invalid.Count != 0 ? string.Join(", ", invalid) : null;
+			return new Tuple<string, string>(item1, item2);
+		}
 	}
 }
