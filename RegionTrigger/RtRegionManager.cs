@@ -48,6 +48,7 @@ namespace RegionTrigger {
 							Main.worldID.ToString())
 					) {
 					Regions.Clear();
+
 					while(reader.Read()) {
 						var id = reader.Get<int>("Id");
 						var regionId = reader.Get<int>("RegionId");
@@ -62,76 +63,82 @@ namespace RegionTrigger {
 						var tileb = reader.Get<string>("Tilebans");
 
 						Group temp = TShock.Utils.GetGroup(tempgroupstr);
-						List<int> itemblist = new List<int>(),
-							projblist = new List<int>(),
-							tileblist = new List<int>();
 						var region = new RtRegion(id, regionId) {
-							Events = flagstr,
+							Events = flagstr ?? Events.None,
 							EnterMsg = entermsg,
 							LeaveMsg = leavemsg,
 							Message = msg,
 							MsgInterval = msgitv ?? 0,
 							TempGroup = temp,
-							Itembans = itemblist,
-							Projbans = projblist,
-							Tilebans = tileblist
+							Itembans = itemb,
+							Projbans = projb,
+							Tilebans = tileb
 						};
 
 						if(region.HasEvent(Events.TempGroup) && region.TempGroup == null)
-							TShock.Log.Error("[RegionTrigger] TempGroup '{0}' of region '{1}' is invalid!", tempgroupstr, TShock.Regions.GetRegionByID(regionId).Name);
+							TShock.Log.Error("[RegionTrigger] TempGroup '{0}' of region '{1}' is invalid!", tempgroupstr, region.Region.Name);
 
 						Regions.Add(region);
 					}
 				}
-#if DEBUG
-				Console.WriteLine("[RegionTrigger] Successfully loaded {0}/{1} region(s).", Regions.Count, TShock.Regions.Regions.Count);
-#endif
 			} catch(Exception e) {
+#if DEBUG
 				Debug.WriteLine(e);
 				Debugger.Break();
+#endif
+				TShock.Log.ConsoleError("[RegionTrigger] Load regions failed. Check log for more information.");
+				TShock.Log.Error(e.ToString());
 			}
 		}
 
-		public bool AddRtRegion(int regionId, string flags) {
-			if(Regions.Any(r => r.RegionId == regionId))
-				return false;
+		public void AddRtRegion(string regionName, string flags) {
+			if(Regions.Any(r => r.Region.Name == regionName))
+				throw new Exception("Region is already defined!");
 
+			var region = TShock.Regions.GetRegionByName(regionName);
+			if(region == null)
+				throw new Exception($"Couldn't find region named '{regionName}'!");
+			
 			string query = "INSERT INTO RtRegions (RegionId, Flags) VALUES (@0, @1);";
 			try {
-				if(_database.Query(query, regionId, string.IsNullOrWhiteSpace(flags) ? Events.None : flags) != 0)
-					return true;
-				return false;
+				if(_database.Query(query, region.ID, string.IsNullOrWhiteSpace(flags) ? Events.None : flags) != 0)
+					return;
+				throw new Exception("Database error: No affected rows.");
 			} catch(Exception e) {
-#if DEBUG
-				Debug.WriteLine(e);
-				Debugger.Break();
-#endif
 				TShock.Log.Error(e.ToString());
-				return false;
+				throw new Exception("Database error! Check logs for more information.", e);
 			}
 		}
 
-		public bool DeleteRtRegion(int regionId) {
+		public void DeleteRtRegion(string regionName) {
+			var region = TShock.Regions.GetRegionByName(regionName);
+			if(region == null)
+				throw new Exception($"Couldn't find region named '{regionName}'!");
+
+			if(Regions.All(r => r.Region.ID != region.ID))
+				throw new Exception("Region has not been defined!");
+
 			try {
-				if(_database.Query("DELETE FROM RtRegions WHERE RegionId=@0", regionId) != 0 &&
-					Regions.RemoveAll(r => r.RegionId == regionId) != 0)
-					return true;
+				if(_database.Query("DELETE FROM RtRegions WHERE RegionId=@0", region.ID) != 0 &&
+					Regions.RemoveAll(r => r.Region.ID == region.ID) != 0)
+					return;
+				throw new Exception("Database error: No affected rows.");
 			} catch(Exception e) {
-#if DEBUG
-				Debug.WriteLine(e);
-				Debugger.Break();
-#endif
 				TShock.Log.Error(e.ToString());
+				throw new Exception("Database error! Check logs for more information.", e);
 			}
-			return false;
 		}
 
-		public bool AddFlags(int rtregionId, string flags) {
-			RtRegion rt = GetRtRegionById(rtregionId);
+		public void AddFlags(string regionName, string flags) {
+			var region = TShock.Regions.GetRegionByName(regionName);
+			if(region == null)
+				throw new Exception($"Couldn't find region named '{regionName}'!");
+
+			RtRegion rt = GetRtRegionById(region.ID);
 			if(rt == null)
-				return false;
+				throw new Exception("Region has not been defined!");
 			if(string.IsNullOrWhiteSpace(flags) || flags.ToLower() == Events.None)
-				return false;
+				throw new ArgumentException("Invalid events!");
 
 			var oldstr = rt.Events;
 			var newevt = flags.ToLower().Split(',');
@@ -139,14 +146,13 @@ namespace RegionTrigger {
 				oldstr += ',';
 
 			oldstr = newevt
-				.Where(en => !string.IsNullOrWhiteSpace(en) && Events.Contains(en) && !rt.EventsList.Contains(en))
+				.Where(en => !string.IsNullOrWhiteSpace(en) && Events.Contains(en) && !rt.HasEvent(en))
 				.Aggregate(oldstr, (current, en) => current + $"{en},");
 			oldstr = oldstr.Substring(0, oldstr.Length - 1);
 
-			if(_database.Query("UPDATE RtRegions SET Flags=@0 WHERE Id=@1", oldstr, rtregionId) == 0)
-				return false;
+			if(_database.Query("UPDATE RtRegions SET Flags=@0 WHERE Id=@1", oldstr, rt.Id) == 0)
+				throw new Exception("Database error: No affected rows.");
 			rt.Events = oldstr;
-			return true;
 		}
 
 		public bool SetGroup(int rtregionId, string group) {
@@ -208,6 +214,19 @@ namespace RegionTrigger {
 			=> Regions.SingleOrDefault(rt => rt.Id == id);
 
 		public RtRegion GetRtRegionByRegionId(int regionId)
-			=> Regions.SingleOrDefault(rt => rt.RegionId == regionId);
+			=> Regions.SingleOrDefault(rt => regionId == rt.Region.ID);
+
+		public RtRegion GetTopRegion(IEnumerable<RtRegion> regions) {
+			RtRegion ret = null;
+			foreach(RtRegion r in regions) {
+				if(ret == null)
+					ret = r;
+				else {
+					if(r.Region.Z > ret.Region.Z)
+						ret = r;
+				}
+			}
+			return ret;
+		}
 	}
 }
