@@ -14,7 +14,6 @@ namespace RegionTrigger {
 		public List<int> Projbans;
 		public List<int> Tilebans;
 
-		public Group Group;
 		public Group TempGroup;
 		private readonly List<string> _events = new List<string>();
 		public IReadOnlyList<string> EventsList => _events.AsReadOnly();

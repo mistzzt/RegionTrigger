@@ -23,7 +23,6 @@ namespace RegionTrigger {
 									 new SqlColumn("Id", MySqlDbType.Int32) { Primary = true, AutoIncrement = true },
 									 new SqlColumn("RegionId", MySqlDbType.Int32) { Unique = true, NotNull = true },
 									 new SqlColumn("Flags", MySqlDbType.Text),
-									 new SqlColumn("GroupName", MySqlDbType.String, 32),
 									 new SqlColumn("EnterMsg", MySqlDbType.Text),
 									 new SqlColumn("LeaveMsg", MySqlDbType.Text),
 									 new SqlColumn("Message", MySqlDbType.String, 20),
@@ -53,7 +52,6 @@ namespace RegionTrigger {
 						var id = reader.Get<int>("Id");
 						var regionId = reader.Get<int>("RegionId");
 						var flagstr = reader.Get<string>("Flags");
-						var groupstr = reader.Get<string>("GroupName");
 						var entermsg = reader.Get<string>("EnterMsg");
 						var leavemsg = reader.Get<string>("LeaveMsg");
 						var msg = reader.Get<string>("Message");
@@ -63,15 +61,12 @@ namespace RegionTrigger {
 						var projb = reader.Get<string>("Projbans");
 						var tileb = reader.Get<string>("Tilebans");
 
-						Group group = TShock.Utils.GetGroup(groupstr),
-							temp = TShock.Utils.GetGroup(tempgroupstr);
+						Group temp = TShock.Utils.GetGroup(tempgroupstr);
 						List<int> itemblist = new List<int>(),
 							projblist = new List<int>(),
 							tileblist = new List<int>();
-
-						Regions.Add(new RtRegion(id, regionId) {
+						var region = new RtRegion(id, regionId) {
 							Events = flagstr,
-							Group = group,
 							EnterMsg = entermsg,
 							LeaveMsg = leavemsg,
 							Message = msg,
@@ -80,7 +75,12 @@ namespace RegionTrigger {
 							Itembans = itemblist,
 							Projbans = projblist,
 							Tilebans = tileblist
-						});
+						};
+
+						if(region.HasEvent(Events.TempGroup) && region.TempGroup == null)
+							TShock.Log.Error("[RegionTrigger] TempGroup '{0}' of region '{1}' is invalid!", tempgroupstr, TShock.Regions.GetRegionByID(regionId).Name);
+
+						Regions.Add(region);
 					}
 				}
 #if DEBUG
