@@ -42,10 +42,13 @@ namespace RegionTrigger {
 		[Description("Disallows players from enabling their pvp mode.")]
 		public static readonly string NoPvp = "nopvp"; // ok
 
-		[Description("Disallows players from entering specific regions.")]
-		public static readonly string Private = "private"; // ok
+		[Description("(DONT WORK!)Disallows players from entering specific regions.")]
+		public static readonly string Private = "private";
 
-		[Description("Changes players' prefix when they are in regions.")]
+		[Description("(DONT WORK!)Only players in the same regions can chat with each other.")]
+		public static readonly string RegionChat = "regionchat";
+
+		[Description("(DONT WORK!)Changes players' prefix when they are in regions.")]
 		public static readonly string ThirdView = "thirdview";
 
 		public static List<string> EventsList = new List<string>();
@@ -75,10 +78,10 @@ namespace RegionTrigger {
 		/// </summary>
 		/// <param name="events">Events splited by ','</param>
 		/// <returns>T1: Valid events & T2: Invalid events</returns>
-		internal static Tuple<string,string> ValidateEvents(string events) {
+		internal static Tuple<string, string> ValidateEvents(string events) {
 			if(string.IsNullOrWhiteSpace(events))
 				return new Tuple<string, string>(None, null);
-			
+
 			List<string> valid = new List<string>(),
 				invalid = new List<string>();
 			var splitedEvents = events.Trim().ToLower().Split(',');
@@ -91,12 +94,37 @@ namespace RegionTrigger {
 					else
 						invalid.Add(e);
 				});
-			if(valid.Count == 0)
-				valid.Add(None);
 
-			var item1 = string.Join(",", valid);
+			var item1 = valid.Count != 0 ? string.Join(",", valid) : null;
 			var item2 = invalid.Count != 0 ? string.Join(", ", invalid) : null;
 			return new Tuple<string, string>(item1, item2);
+		}
+
+		/// <summary>
+		/// Checks given events
+		/// </summary>
+		/// <param name="events">Events splited by ','</param>
+		/// <returns>T1: Valid events & T2: Invalid events</returns>
+		internal static Tuple<List<string>, List<string>> ValidateEventsList(string events) {
+			if(string.IsNullOrWhiteSpace(events))
+				return new Tuple<List<string>, List<string>>(new List<string> { None }, null);
+
+			List<string> valid = new List<string>(),
+				invalid = new List<string>();
+			var splitedEvents = events.Trim().ToLower().Split(',');
+
+			splitedEvents
+				.Where(e => !string.IsNullOrWhiteSpace(e))
+				.ForEach(e => {
+					if(Contains(e))
+						valid.Add(e);
+					else
+						invalid.Add(e);
+				});
+
+			var item1 = valid.Count != 0 ? valid : null;
+			var item2 = invalid.Count != 0 ? invalid : null;
+			return new Tuple<List<string>, List<string>>(item1, item2);
 		}
 	}
 }

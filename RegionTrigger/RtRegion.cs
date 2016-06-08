@@ -18,30 +18,30 @@ namespace RegionTrigger {
 		private readonly List<string> _events = new List<string>();
 		public string Events {
 			get {
-				return string.Join(",", _events);
+				return _events.Count == 0
+					? global::RegionTrigger.Events.None
+					: string.Join(",", _events);
 			}
 			set {
 				if(string.IsNullOrWhiteSpace(value))
 					return;
 				_events.Clear();
-				var splitedEvents = global::RegionTrigger.Events.ValidateEvents(value).Item1.Split(',');
-				foreach(var @event in splitedEvents.Where(e => !string.IsNullOrWhiteSpace(e)))
+				var events = value.Split(',');
+				foreach(var @event in events.Where(e => !string.IsNullOrWhiteSpace(e)))
 					_events.Add(@event.Trim());
 			}
 		}
 
-		private readonly List<int> _itembans = new List<int>();
+		private readonly List<string> _itembans = new List<string>();
 		public string Itembans {
 			get { return string.Join(",", _itembans); }
 			set {
 				if(string.IsNullOrWhiteSpace(value))
 					return;
 				_itembans.Clear();
-				var itemids = value.Trim().ToLower().Split(',');
-				foreach (var itemid in itemids.Where(e => !string.IsNullOrWhiteSpace(e))) {
-					int item;
-					if(int.TryParse(itemid, out item) && item > -49 && item < Main.maxItemTypes)
-						_itembans.Add(item);
+				var items = value.Trim().Split(',');
+				foreach(var item in items.Where(e => !string.IsNullOrWhiteSpace(e))) {
+					_itembans.Add(item);
 				}
 			}
 		}
@@ -72,7 +72,7 @@ namespace RegionTrigger {
 				var tileids = value.Trim().ToLower().Split(',');
 				foreach(var tileid in tileids.Where(e => !string.IsNullOrWhiteSpace(e))) {
 					short tile;
-					if(short.TryParse(tileid, out tile) && tile > -1)
+					if(short.TryParse(tileid, out tile) && tile > -1 && tile < Main.maxTileSets)
 						_tilebans.Add(tile);
 				}
 			}
@@ -88,13 +88,25 @@ namespace RegionTrigger {
 		public bool HasEvent(string @event)
 			=> _events.Contains(@event);
 
+		public bool RemoveEvent(string @event)
+			=> _events.Remove(@event);
+
 		public bool TileIsBanned(short tileId)
 			=> _tilebans.Contains(tileId);
+
+		public bool RemoveBannedTile(short tileId)
+			=> _tilebans.Remove(tileId);
 
 		public bool ProjectileIsBanned(short projId)
 			=> _projbans.Contains(projId);
 
-		public bool ItemIsBanned(int itemId)
-			=> _itembans.Contains(itemId);
+		public bool RemoveBannedProjectile(short projId)
+			=> _projbans.Remove(projId);
+
+		public bool ItemIsBanned(string itemName)
+			=> _itembans.Contains(itemName);
+
+		public bool RemoveBannedItem(string itemName)
+			=> _itembans.Remove(itemName);
 	}
 }
