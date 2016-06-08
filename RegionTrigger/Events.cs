@@ -45,7 +45,7 @@ namespace RegionTrigger {
 		[Description("(DONT WORK!)Disallows players from entering specific regions.")]
 		public static readonly string Private = "private";
 
-		[Description("(DONT WORK!)Only players in the same regions can chat with each other.")]
+		[Description("(DONT WORK!)Enables region chatting.")]
 		public static readonly string RegionChat = "regionchat";
 
 		[Description("(DONT WORK!)Changes players' prefix when they are in regions.")]
@@ -58,8 +58,7 @@ namespace RegionTrigger {
 			Type t = typeof(Events);
 
 			foreach(var fieldInfo in t.GetFields()
-				.Where(f => f.IsPublic && f.FieldType == typeof(string))
-				.OrderBy(f => f.Name)) {
+				.Where(f => f.IsPublic && f.FieldType == typeof(string))) {
 
 				EventsList.Add((string)fieldInfo.GetValue(null));
 
