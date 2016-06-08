@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
 using TerrariaApi.Server;
@@ -55,7 +56,7 @@ namespace RegionTrigger {
 		}
 
 		private void OnInitialize(EventArgs args) {
-			Commands.ChatCommands.Add(new Command("regiontrigger.manage.define", DefineRtRegion, "defrt"));
+			Commands.ChatCommands.Add(new Command("regiontrigger.manage", RegionSetProperties, "rt"));
 
 			RtRegions = new RtRegionManager(TShock.DB);
 		}
@@ -138,9 +139,8 @@ namespace RegionTrigger {
 
 			BitsByte control = args.Control;
 			if(control[5]) {
-				var itemId = ply.TPlayer.inventory[args.Item].netID;
 				var itemName = ply.TPlayer.inventory[args.Item].name;
-				if(rt.ItemIsBanned(itemId) && !ply.HasPermission("regiontrigger.bypass.itemban")) {
+				if(rt.ItemIsBanned(itemName) && !ply.HasPermission("regiontrigger.bypass.itemban")) {
 					control[5] = false;
 					args.Control = control;
 					ply.Disable($"using a banned item ({itemName})", DisableFlags.WriteToLogAndConsole);
@@ -253,7 +253,7 @@ namespace RegionTrigger {
 			}
 
 			if(rt.HasEvent(Events.Private) && !args.Player.HasPermission("regiontrigger.bypass.private")) {
-				args.Player.Teleport(args.Player.LastNetPosition.X, args.Player.LastNetPosition.Y); // todo: validate that
+				args.Player.Spawn();
 				args.Player.SendErrorMessage("You don't have permission to enter that region.");
 			}
 		}
@@ -279,30 +279,258 @@ namespace RegionTrigger {
 			}
 		}
 
-		private void DefineRtRegion(CommandArgs args) {
-			if(args.Parameters.Count == 0 || args.Parameters.Count > 2) {
-				args.Player.SendErrorMessage("Invaild syntax! Proper syntax: /defrt <Region name> [events...]");
-				args.Player.SendErrorMessage("Use {0} to get available events.", TShock.Utils.ColorTag("/setrt events", Color.Cyan));
+		private static readonly string[] DoNotNeedDelValueProps = {
+			"em", "entermsg",
+			"lm", "leavemsg",
+			"msg", "message",
+			"mi", "msgitv", "msginterval", "messageinterval",
+			"tg", "tempgroup"
+		};
+
+		private static readonly string[] PropStrings = {
+			"e", "event", "events",
+			"pb", "proj", "projban",
+			"ib", "item", "itemban",
+			"tb", "tile", "tileban",
+			"em", "entermsg",
+			"lm", "leavemsg",
+			"msg", "message",
+			"mi", "msgitv", "msginterval", "messageinterval",
+			"tg", "tempgroup"
+		};
+
+		[SuppressMessage("ReSharper", "SwitchStatementMissingSomeCases")]
+		private void RegionSetProperties(CommandArgs args) {
+			if(args.Parameters.Count == 0) {
+				args.Player.SendErrorMessage("Invalid syntax! Type /rt --help to get instructions.");
 				return;
 			}
-			string regionName = args.Parameters[0];
-			string events = args.Parameters.Count == 1 || string.IsNullOrWhiteSpace(args.Parameters[1])
-				? Events.None
-				: args.Parameters[1].ToLower();
-			try {
-				var validatedEvents = Events.ValidateEvents(events);
-				RtRegions.AddRtRegion(regionName, validatedEvents.Item1);
-				args.Player.SendSuccessMessage("Region {0} has been defined successfully!", TShock.Utils.ColorTag(regionName, Color.Cyan));
-				if(validatedEvents.Item2 != null)
-					args.Player.SendErrorMessage("Invalid events: {0}", validatedEvents.Item2);
-			}
-			catch(RtRegionManager.RegionDefinedException ex) {
-				args.Player.SendErrorMessage(ex.Message);
-				args.Player.SendErrorMessage("Use {0} to set events for regions.", TShock.Utils.ColorTag("/setrt", Color.Cyan));
-			}
-			catch(Exception ex) {
-				args.Player.SendErrorMessage(ex.Message);
-			}
+
+			var cmd = args.Parameters[0].Trim().ToLower();
+			if(cmd.StartsWith("set-")) {
+				#region set-prop
+				if(args.Parameters.Count < 3) {
+					args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /rt set-{prop} <region> [--del] <value>");
+					return;
+				}
+				var propset = cmd.Substring(4);
+				// check the property
+				if(!PropStrings.Contains(propset)) {
+					args.Player.SendErrorMessage("Invalid property!");
+					return;
+				}
+				// check existance of region
+				var region = TShock.Regions.GetRegionByName(args.Parameters[1]);
+				if(region == null) {
+					args.Player.SendErrorMessage("Invalid region!");
+					return;
+				}
+				// if region hasn't been added into database
+				var rt = RtRegions.GetRtRegionByRegionId(region.ID);
+				if(rt == null) {
+					try {
+						RtRegions.AddRtRegion(region.Name, null);
+						rt = RtRegions.GetRtRegionByRegionId(region.ID);
+						if(rt == null)
+							throw new Exception("Database error: cannot create new region!!");
+					} catch(Exception ex) {
+						args.Player.SendErrorMessage(ex.Message);
+						return;
+					}
+				}
+				// has parameter --del
+				var isDel = args.Parameters[2].ToLower() == "--del";
+				// sometimes commands with --del don't need <value> e.g. /rt set-tg <region> --del
+				if(isDel && args.Parameters.Count == 3 && !DoNotNeedDelValueProps.Contains(propset)) {
+					args.Player.SendErrorMessage($"Invalid syntax! Proper syntax: /rt set-{propset} <region> [--del] <value>");
+					return;
+				}
+				var propValue = isDel && args.Parameters.Count == 3 ? null : isDel
+					? string.Join(" ", args.Parameters.GetRange(3, args.Parameters.Count - 3))
+					: string.Join(" ", args.Parameters.GetRange(2, args.Parameters.Count - 2));
+
+				try {
+					switch(propset) {
+						case "e":
+						case "event":
+						case "events":
+							var validatedEvents = Events.ValidateEvents(propValue);
+							if(validatedEvents.Item1 != null) {
+								if(!isDel)
+									RtRegions.AddEvents(region.Name, validatedEvents.Item1);
+								else
+									RtRegions.RemoveEvents(region.Name, validatedEvents.Item1);
+								args.Player.SendSuccessMessage("Region {0} has been modified successfully!", region.Name);
+							}
+							if(validatedEvents.Item2 != null)
+								args.Player.SendErrorMessage("Invalid events: {0}", validatedEvents.Item2);
+							break;
+						case "pb":
+						case "proj":
+						case "projban":
+							short id;
+							if(short.TryParse(propValue, out id) && id > 0 && id < Main.maxProjectileTypes) {
+								if(!isDel) {
+									RtRegions.AddProjban(region.Name, id);
+									args.Player.SendSuccessMessage("Banned projectile {0} in region {1}.", id, region.Name);
+								} else {
+									RtRegions.RemoveProjban(region.Name, id);
+									args.Player.SendSuccessMessage("Banned projectile {0} in region {1}.", id, region.Name);
+								}
+							} else
+								args.Player.SendErrorMessage("Invalid projectile ID!");
+							break;
+						case "ib":
+						case "item":
+						case "itemban":
+							List<Item> items = TShock.Utils.GetItemByIdOrName(propValue);
+							if(items.Count == 0) {
+								args.Player.SendErrorMessage("Invalid item.");
+							} else if(items.Count > 1) {
+								TShock.Utils.SendMultipleMatchError(args.Player, items.Select(i => i.name));
+							} else {
+								if(!isDel) {
+									RtRegions.AddItemban(region.Name, items[0].name);
+									args.Player.SendSuccessMessage("Banned {0} in region {1}.", items[0].name, region.Name);
+								} else {
+									RtRegions.RemoveItemban(region.Name, items[0].name);
+									args.Player.SendSuccessMessage("Unbanned {0} in region {1}.", items[0].name, region.Name);
+								}
+							}
+							break;
+						case "tb":
+						case "tile":
+						case "tileban":
+							short tileid;
+							if(short.TryParse(propValue, out tileid) && tileid >= 0 && tileid < Main.maxTileSets) {
+								if(!isDel) {
+									RtRegions.AddTileban(region.Name, tileid);
+									args.Player.SendSuccessMessage("Banned tile {0} in region {1}.", tileid, region.Name);
+								} else {
+									RtRegions.RemoveTileban(region.Name, tileid);
+									args.Player.SendSuccessMessage("Unbanned tile {0} in region {1}.", tileid, region.Name);
+								}
+							} else
+								args.Player.SendErrorMessage("Invalid tile ID!");
+							break;
+						case "em":
+						case "entermsg":
+							RtRegions.SetEnterMessage(region.Name, !isDel ? propValue : null);
+							if(!isDel)
+								args.Player.SendSuccessMessage("Set enter message of region {0} to '{1}'", region.Name, propValue);
+							else
+								args.Player.SendSuccessMessage("Removed enter message of region {0}.", region.Name);
+							break;
+						case "lm":
+						case "leavemsg":
+							RtRegions.SetLeaveMessage(region.Name, !isDel ? propValue : null);
+							if(!isDel)
+								args.Player.SendSuccessMessage("Set leave message of region {0} to '{1}'", region.Name, propValue);
+							else
+								args.Player.SendSuccessMessage("Removed leave message of region {0}.", region.Name);
+							break;
+						case "msg":
+						case "message":
+							RtRegions.SetMessage(region.Name, !isDel ? propValue : null);
+							if(!isDel)
+								args.Player.SendSuccessMessage("Set message of region {0} to '{1}'", region.Name, propValue);
+							else
+								args.Player.SendSuccessMessage("Removed message of region {0}.", region.Name);
+							break;
+						case "mi":
+						case "msgitv":
+						case "msginterval":
+						case "messageinterval":
+							if(isDel)
+								throw new Exception("Invalid usage! Proper usage: /rt set-mi <region> <interval>");
+							int itv;
+							if(!int.TryParse(propValue, out itv) || itv < 0)
+								throw new Exception("Invalid interval. (Interval must be integer >= 0)");
+							RtRegions.SetMsgInterval(region.Name, itv);
+							args.Player.SendSuccessMessage("Set message interval of region {0} to {1}.", region.Name, itv);
+							break;
+						case "tg":
+						case "tempgroup":
+							if(!isDel && propValue != "null") {
+								RtRegions.SetTempGroup(region.Name, propValue);
+								args.Player.SendSuccessMessage("Set tempgroup of region {0} to {1}.", region.Name, propValue);
+							} else {
+								RtRegions.SetTempGroup(region.Name, null);
+								args.Player.SendSuccessMessage("Removed tempgroup of region {0}.", region.Name);
+							}
+							break;
+					}
+				} catch(Exception ex) {
+					args.Player.SendErrorMessage(ex.Message);
+					return;
+				}
+				#endregion
+			} else
+				switch(cmd) {
+					case "show":
+						#region show
+						{
+							if(args.Parameters.Count != 2) {
+								args.Player.SendErrorMessage("Invalid syntax! Usage: /rt show <region>");
+								return;
+							}
+							var rt = RtRegions.GetRtRegionByName(args.Parameters[1]);
+							if(rt == null) {
+								args.Player.SendErrorMessage("Invalid region!");
+								return;
+							}
+
+							var infos = new List<string> {
+								$"*** Information of region {rt.Region.Name} ***",
+								$"1. Events: {rt.Events}",
+								$"2. TempGroup: {rt.TempGroup?.Name ?? "None"}",
+								$"3. Message & Interval: {rt.Message ?? "None"}({rt.MsgInterval}s)",
+								$"4. EnterMessage: {rt.EnterMsg ?? "None"}",
+								$"5. LeaveMessage: {rt.LeaveMsg ?? "None"}",
+								$"6. Itembans: {(string.IsNullOrWhiteSpace(rt.Itembans) ? "None" : rt.Itembans)}",
+								$"7. Projbans: {(string.IsNullOrWhiteSpace(rt.Projbans) ? "None" : rt.Projbans)}",
+								$"8. Tilebans: {(string.IsNullOrWhiteSpace(rt.Tilebans) ? "None" : rt.Tilebans)}"
+							};
+							infos.ForEach(args.Player.SendInfoMessage);
+						}
+						#endregion
+						break;
+					case "reload":
+						RtRegions.Reload();
+						args.Player.SendSuccessMessage("Reloaded regions successfully.");
+						break;
+					case "--help":
+						#region Help
+						int pageNumber;
+						if(!PaginationTools.TryParsePageNumber(args.Parameters, 1, args.Player, out pageNumber))
+							return;
+
+						var lines = new List<string>
+						{
+							"*** Usage: /rt set-{prop} <region> [--del] <value>",
+							"           /rt show <region>",
+							"           /rt reload",
+							"           /rt --help [page]",
+							"*** Avaliable properties:",
+							"           event(e), projban(pb), itemban(ib), tileban(tb)",
+							"           entermsg(em), leavemsg(lm), message(msg)",
+							"           messageinterval(msgitv/mi), tempgroup(tg)",
+							"*** Available events:"
+						};
+						lines.AddRange(Events.EventsDescriptions.Select(pair => $"{pair.Key} - {pair.Value}"));
+
+						PaginationTools.SendPage(args.Player, pageNumber, lines,
+							new PaginationTools.Settings {
+								HeaderFormat = "RegionTrigger Sub-Commands Instructions ({0}/{1}):",
+								FooterFormat = "Type {0}rt --help {{0}} for more instructions.".SFormat(Commands.Specifier)
+							}
+						);
+						#endregion
+						break;
+					default:
+						args.Player.SendErrorMessage("Invalid syntax! Type /rt --help for instructions.");
+						return;
+				}
 		}
 	}
 }
