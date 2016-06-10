@@ -32,8 +32,8 @@ You can also find this plugin in [TShock offical forum][tshockco].
 - TempGroup - *Alters players' tempgroups when they are in regions.*
 - Itemban - *Disallows players in specific regions from using banned items.*
 - Projban - *Disallows players in specific regions from using banned projectiles.*
-- Tileban - *Disallows players in specific regions from using banned tiles.
-- Kill - Kills players entering to region.*
+- Tileban - *Disallows players in specific regions from using banned tiles.*
+- Kill - *Kills players entering to region.*
 - Godmode - *Turns players' godmode on when they are in regions.*
 - Pvp - *Turns players' PvP status on when they are in regions.*
 - NoPvp - *Disallows players from enabling their PvP mode.*
