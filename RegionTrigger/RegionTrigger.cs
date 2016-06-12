@@ -115,7 +115,7 @@ namespace RegionTrigger {
 		}
 
 		private void OnNewProjectile(object sender, GetDataHandlers.NewProjectileEventArgs args) {
-			var ply = TShock.Players[args.Index];
+			var ply = TShock.Players[args.Owner];
 			if(ply.CurrentRegion == null)
 				return;
 			var rt = RtRegions.GetRtRegionByRegionId(ply.CurrentRegion.ID);
