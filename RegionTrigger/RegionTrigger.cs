@@ -376,7 +376,7 @@ namespace RegionTrigger {
 									args.Player.SendSuccessMessage("Banned projectile {0} in region {1}.", id, region.Name);
 								} else {
 									RtRegions.RemoveProjban(region.Name, id);
-									args.Player.SendSuccessMessage("Banned projectile {0} in region {1}.", id, region.Name);
+									args.Player.SendSuccessMessage("Unbanned projectile {0} in region {1}.", id, region.Name);
 								}
 							} else
 								args.Player.SendErrorMessage("Invalid projectile ID!");

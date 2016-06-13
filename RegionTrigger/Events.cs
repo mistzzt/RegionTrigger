@@ -42,13 +42,13 @@ namespace RegionTrigger {
 		[Description("Disallows players from enabling their pvp mode.")]
 		public static readonly string NoPvp = "nopvp"; // ok
 
-		[Description("(DONT WORK!)Disallows players from entering regions.")]
-		public static readonly string Private = "private";
+		[Description("Disallows players from entering regions.")]
+		public static readonly string Private = "private"; // ok
 
 		[Description("(DONT WORK!)Enables region chatting.")]
 		public static readonly string RegionChat = "regionchat";
 
-		[Description("(DONT WORK!)Changes players' prefix when they are in regions.")]
+		[Description("(DONT WORK!)Changes perspectives. For gaming use.")]
 		public static readonly string ThirdView = "thirdview";
 
 		public static List<string> EventsList = new List<string>();
@@ -81,21 +81,10 @@ namespace RegionTrigger {
 			if(string.IsNullOrWhiteSpace(events))
 				return new Tuple<string, string>(None, null);
 
-			List<string> valid = new List<string>(),
-				invalid = new List<string>();
-			var splitedEvents = events.Trim().ToLower().Split(',');
+			var result = ValidateEventsList(events);
 
-			splitedEvents
-				.Where(e => !string.IsNullOrWhiteSpace(e))
-				.ForEach(e => {
-					if(Contains(e))
-						valid.Add(e);
-					else
-						invalid.Add(e);
-				});
-
-			var item1 = valid.Count != 0 ? string.Join(",", valid) : null;
-			var item2 = invalid.Count != 0 ? string.Join(", ", invalid) : null;
+			var item1 = result.Item1 != null ? string.Join(",", result.Item1) : null;
+			var item2 = result.Item2 != null ? string.Join(", ", result.Item2) : null;
 			return new Tuple<string, string>(item1, item2);
 		}
 
