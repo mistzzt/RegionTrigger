@@ -10,7 +10,8 @@ using TShockAPI.Hooks;
 
 namespace RegionTrigger {
 	[ApiVersion(1, 23)]
-	public class RegionTrigger:TerrariaPlugin {
+	[SuppressMessage("ReSharper", "InvertIf")]
+	public class RegionTrigger : TerrariaPlugin {
 		public const string Rtdataname = "rtply";
 		public RtRegionManager RtRegions;
 
@@ -96,6 +97,7 @@ namespace RegionTrigger {
 				ply.SendErrorMessage("You can't change your PvP status in this region!");
 				ply.SendData(PacketTypes.TogglePvp, "", args.PlayerId);
 				args.Handled = true;
+				// ReSharper disable once RedundantJumpStatement
 				return;
 			}
 		}
@@ -280,23 +282,23 @@ namespace RegionTrigger {
 		}
 
 		private static readonly string[] DoNotNeedDelValueProps = {
-			"em", "entermsg",
-			"lm", "leavemsg",
-			"msg", "message",
-			"mi", "msgitv", "msginterval", "messageinterval",
-			"tg", "tempgroup"
+			"em",
+			"lm",
+			"mi",
+			"tg",
+			"msg"
 		};
 
-		private static readonly string[] PropStrings = {
-			"e", "event", "events",
-			"pb", "proj", "projban",
-			"ib", "item", "itemban",
-			"tb", "tile", "tileban",
-			"em", "entermsg",
-			"lm", "leavemsg",
-			"msg", "message",
-			"mi", "msgitv", "msginterval", "messageinterval",
-			"tg", "tempgroup"
+		private static readonly string[][] PropStrings = {
+			new[] {"e", "event"},
+			new[] {"pb", "proj", "projban"},
+			new[] {"ib", "item", "itemban"},
+			new[] {"tb", "tile", "tileban"},
+			new[] {"em", "entermsg"},
+			new[] {"lm", "leavemsg"},
+			new[] {"msg", "message"},
+			new[] {"mi", "msgitv", "msginterval", "messageinterval"},
+			new[] {"tg", "tempgroup"}
 		};
 
 		[SuppressMessage("ReSharper", "SwitchStatementMissingSomeCases")]
@@ -310,15 +312,18 @@ namespace RegionTrigger {
 			if(cmd.StartsWith("set-")) {
 				#region set-prop
 				if(args.Parameters.Count < 3) {
-					args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /rt set-{prop} <region> [--del] <value>");
+					args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /rt set-<prop> <region> [--del] <value>");
 					return;
 				}
 				var propset = cmd.Substring(4);
 				// check the property
-				if(!PropStrings.Contains(propset)) {
+				if(!PropStrings.Any(strarray => strarray.Contains(propset))) {
 					args.Player.SendErrorMessage("Invalid property!");
 					return;
 				}
+				// get the shortest representation of property.
+				// e.g. event => e, projban => pb
+				propset = PropStrings.Single(props => props.Contains(propset))[0];
 				// check existance of region
 				var region = TShock.Regions.GetRegionByName(args.Parameters[1]);
 				if(region == null) {
@@ -352,8 +357,6 @@ namespace RegionTrigger {
 				try {
 					switch(propset) {
 						case "e":
-						case "event":
-						case "events":
 							var validatedEvents = Events.ValidateEvents(propValue);
 							if(validatedEvents.Item1 != null) {
 								if(!isDel)
@@ -366,8 +369,6 @@ namespace RegionTrigger {
 								args.Player.SendErrorMessage("Invalid events: {0}", validatedEvents.Item2);
 							break;
 						case "pb":
-						case "proj":
-						case "projban":
 							short id;
 							if(short.TryParse(propValue, out id) && id > 0 && id < Main.maxProjectileTypes) {
 								if(!isDel) {
@@ -381,8 +382,6 @@ namespace RegionTrigger {
 								args.Player.SendErrorMessage("Invalid projectile ID!");
 							break;
 						case "ib":
-						case "item":
-						case "itemban":
 							List<Item> items = TShock.Utils.GetItemByIdOrName(propValue);
 							if(items.Count == 0) {
 								args.Player.SendErrorMessage("Invalid item.");
@@ -399,8 +398,6 @@ namespace RegionTrigger {
 							}
 							break;
 						case "tb":
-						case "tile":
-						case "tileban":
 							short tileid;
 							if(short.TryParse(propValue, out tileid) && tileid >= 0 && tileid < Main.maxTileSets) {
 								if(!isDel) {
@@ -414,7 +411,6 @@ namespace RegionTrigger {
 								args.Player.SendErrorMessage("Invalid tile ID!");
 							break;
 						case "em":
-						case "entermsg":
 							RtRegions.SetEnterMessage(region.Name, !isDel ? propValue : null);
 							if(!isDel)
 								args.Player.SendSuccessMessage("Set enter message of region {0} to '{1}'", region.Name, propValue);
@@ -422,7 +418,6 @@ namespace RegionTrigger {
 								args.Player.SendSuccessMessage("Removed enter message of region {0}.", region.Name);
 							break;
 						case "lm":
-						case "leavemsg":
 							RtRegions.SetLeaveMessage(region.Name, !isDel ? propValue : null);
 							if(!isDel)
 								args.Player.SendSuccessMessage("Set leave message of region {0} to '{1}'", region.Name, propValue);
@@ -430,7 +425,6 @@ namespace RegionTrigger {
 								args.Player.SendSuccessMessage("Removed leave message of region {0}.", region.Name);
 							break;
 						case "msg":
-						case "message":
 							RtRegions.SetMessage(region.Name, !isDel ? propValue : null);
 							if(!isDel)
 								args.Player.SendSuccessMessage("Set message of region {0} to '{1}'", region.Name, propValue);
@@ -438,9 +432,6 @@ namespace RegionTrigger {
 								args.Player.SendSuccessMessage("Removed message of region {0}.", region.Name);
 							break;
 						case "mi":
-						case "msgitv":
-						case "msginterval":
-						case "messageinterval":
 							if(isDel)
 								throw new Exception("Invalid usage! Proper usage: /rt set-mi <region> <interval>");
 							int itv;
@@ -450,7 +441,6 @@ namespace RegionTrigger {
 							args.Player.SendSuccessMessage("Set message interval of region {0} to {1}.", region.Name, itv);
 							break;
 						case "tg":
-						case "tempgroup":
 							if(!isDel && propValue != "null") {
 								RtRegions.SetTempGroup(region.Name, propValue);
 								args.Player.SendSuccessMessage("Set tempgroup of region {0} to {1}.", region.Name, propValue);
@@ -462,7 +452,6 @@ namespace RegionTrigger {
 					}
 				} catch(Exception ex) {
 					args.Player.SendErrorMessage(ex.Message);
-					return;
 				}
 				#endregion
 			} else
@@ -507,17 +496,18 @@ namespace RegionTrigger {
 
 						var lines = new List<string>
 						{
-							"*** Usage: /rt set-{prop} <region> [--del] <value>",
+							"*** Usage: /rt set-<prop> <region> [--del] <value>",
 							"           /rt show <region>",
 							"           /rt reload",
 							"           /rt --help [page]",
-							"*** Avaliable properties:",
-							"           event(e), projban(pb), itemban(ib), tileban(tb)",
-							"           entermsg(em), leavemsg(lm), message(msg)",
-							"           messageinterval(msgitv/mi), tempgroup(tg)",
-							"*** Available events:"
+							"*** Avaliable properties:"
 						};
-						lines.AddRange(Events.EventsDescriptions.Select(pair => $"{pair.Key} - {pair.Value}"));
+						lines.AddRange(PaginationTools.BuildLinesFromTerms(PropStrings, array => {
+							var strarray = (string[])array;
+							return $"{strarray[0]}({string.Join("/", strarray.Skip(1))})";
+						}, ",", 75).Select(s => s.Insert(0, "   * ")));
+						lines.Add("*** Available events:");
+						lines.AddRange(Events.EventsDescriptions.Select(pair => $"   * {pair.Key} - {pair.Value}"));
 
 						PaginationTools.SendPage(args.Player, pageNumber, lines,
 							new PaginationTools.Settings {
