@@ -6,28 +6,28 @@ using TShockAPI;
 
 namespace RegionTrigger {
 	class Events {
-		[Description("Represents a event that does nothing. It can't be added to a region.")]
+		[Description("Represents a event that does nothing. It can't be added.")]
 		public static readonly string None = "none"; // ok
 
-		[Description("Sends player a specific message when entering regions.")]
+		[Description("Sends player a message when entering regions.")]
 		public static readonly string EnterMsg = "entermsg"; // ok
 
-		[Description("Sends player a specific message when leaving regions.")]
+		[Description("Sends player a message when leaving regions.")]
 		public static readonly string LeaveMsg = "leavemsg"; // ok
 
-		[Description("Sends player in regions a specific message.")]
+		[Description("Sends player in regions a message.")]
 		public static readonly string Message = "message"; // ok
 
 		[Description("Alters players' tempgroups when they are in regions.")]
 		public static readonly string TempGroup = "tempgroup"; // ok
 
-		[Description("Disallows players in specific regions from using banned items.")]
+		[Description("Disallows players in regions from using banned items.")]
 		public static readonly string Itemban = "itemban"; // ok
 
-		[Description("Disallows players in specific regions from using banned projectiles.")]
+		[Description("Disallows players in regions from using banned projectiles.")]
 		public static readonly string Projban = "projban"; // ok
 
-		[Description("Disallows players in specific regions from using banned tiles.")]
+		[Description("Disallows players in regions from using banned tiles.")]
 		public static readonly string Tileban = "tileban"; // ok
 
 		[Description("Kills players in regions when they enter.")]
@@ -42,7 +42,7 @@ namespace RegionTrigger {
 		[Description("Disallows players from enabling their pvp mode.")]
 		public static readonly string NoPvp = "nopvp"; // ok
 
-		[Description("(DONT WORK!)Disallows players from entering specific regions.")]
+		[Description("(DONT WORK!)Disallows players from entering regions.")]
 		public static readonly string Private = "private";
 
 		[Description("(DONT WORK!)Enables region chatting.")]
