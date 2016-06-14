@@ -66,10 +66,10 @@ namespace RegionTrigger {
 			=> RtRegions.Reload();
 
 		private static void OnJoin(JoinEventArgs args)
-			=> TShock.Players[args.Who].SetData(Rtdataname, new RtPlayer());
+			=> TShock.Players[args.Who]?.SetData(Rtdataname, new RtPlayer());
 
 		private static void OnLeave(LeaveEventArgs args)
-			=> TShock.Players[args.Who].RemoveData(Rtdataname);
+			=> TShock.Players[args.Who]?.RemoveData(Rtdataname);
 
 		private DateTime _lastCheck = DateTime.UtcNow;
 
