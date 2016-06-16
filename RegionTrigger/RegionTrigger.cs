@@ -24,7 +24,7 @@ namespace RegionTrigger {
 		public override void Initialize() {
 			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize, -10);
 			ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInit, -10);
-			ServerApi.Hooks.ServerJoin.Register(this, OnJoin);
+			ServerApi.Hooks.NetGreetPlayer.Register(this, OnGreetPlayer);
 			ServerApi.Hooks.ServerLeave.Register(this, OnLeave);
 			ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
 
@@ -41,7 +41,7 @@ namespace RegionTrigger {
 			if(disposing) {
 				ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
 				ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInit);
-				ServerApi.Hooks.ServerJoin.Deregister(this, OnJoin);
+				ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGreetPlayer);
 				ServerApi.Hooks.ServerLeave.Deregister(this, OnLeave);
 				ServerApi.Hooks.GameUpdate.Deregister(this, OnUpdate);
 
@@ -65,7 +65,7 @@ namespace RegionTrigger {
 		private void OnPostInit(EventArgs args)
 			=> RtRegions.Reload();
 
-		private static void OnJoin(JoinEventArgs args)
+		private static void OnGreetPlayer(GreetPlayerEventArgs args)
 			=> TShock.Players[args.Who]?.SetData(Rtdataname, new RtPlayer());
 
 		private static void OnLeave(LeaveEventArgs args)
