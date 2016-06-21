@@ -463,22 +463,28 @@ namespace RegionTrigger {
 								args.Player.SendErrorMessage("Invalid syntax! Usage: /rt show <region>");
 								return;
 							}
-							var rt = RtRegions.GetRtRegionByName(args.Parameters[1]);
-							if(rt == null) {
+
+							var region = TShock.Regions.GetRegionByName(args.Parameters[1]);
+							if(region == null) {
 								args.Player.SendErrorMessage("Invalid region!");
+								return;
+							}
+							var rt = RtRegions.GetRtRegionByRegionId(region.ID);
+							if(rt == null) {
+								args.Player.SendInfoMessage("{0} has not been set up yet. Use: /rt set-<prop> <name> <value>", region.Name);
 								return;
 							}
 
 							var infos = new List<string> {
 								$"*** Information of region {rt.Region.Name} ***",
-								$"1. Events: {rt.Events}",
-								$"2. TempGroup: {rt.TempGroup?.Name ?? "None"}",
-								$"3. Message & Interval: {rt.Message ?? "None"}({rt.MsgInterval}s)",
-								$"4. EnterMessage: {rt.EnterMsg ?? "None"}",
-								$"5. LeaveMessage: {rt.LeaveMsg ?? "None"}",
-								$"6. Itembans: {(string.IsNullOrWhiteSpace(rt.Itembans) ? "None" : rt.Itembans)}",
-								$"7. Projbans: {(string.IsNullOrWhiteSpace(rt.Projbans) ? "None" : rt.Projbans)}",
-								$"8. Tilebans: {(string.IsNullOrWhiteSpace(rt.Tilebans) ? "None" : rt.Tilebans)}"
+								$" * Events: {rt.Events}",
+								$" * TempGroup: {rt.TempGroup?.Name ?? "None"}",
+								$" * Message & Interval: {rt.Message ?? "None"}({rt.MsgInterval}s)",
+								$" * EnterMessage: {rt.EnterMsg ?? "None"}",
+								$" * LeaveMessage: {rt.LeaveMsg ?? "None"}",
+								$" * Itembans: {(string.IsNullOrWhiteSpace(rt.Itembans) ? "None" : rt.Itembans)}",
+								$" * Projbans: {(string.IsNullOrWhiteSpace(rt.Projbans) ? "None" : rt.Projbans)}",
+								$" * Tilebans: {(string.IsNullOrWhiteSpace(rt.Tilebans) ? "None" : rt.Tilebans)}"
 							};
 							infos.ForEach(args.Player.SendInfoMessage);
 						}
@@ -486,7 +492,7 @@ namespace RegionTrigger {
 						break;
 					case "reload":
 						RtRegions.Reload();
-						args.Player.SendSuccessMessage("Reloaded regions successfully.");
+						args.Player.SendSuccessMessage("Reloaded regions from database successfully.");
 						break;
 					case "--help":
 						#region Help
