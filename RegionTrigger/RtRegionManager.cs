@@ -124,7 +124,7 @@ namespace RegionTrigger {
 		public void DeleteRtRegion(string regionName) {
 			RtRegion rt = GetRtRegionByName(regionName);
 			if(rt == null)
-				throw new Exception("Invalid region!");
+				return;
 
 			try {
 				if(_database.Query("DELETE FROM RtRegions WHERE RegionId = @0", rt.Region.ID) != 0 &&
