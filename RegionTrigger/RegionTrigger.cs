@@ -412,22 +412,31 @@ namespace RegionTrigger {
 							break;
 						case "em":
 							RtRegions.SetEnterMessage(region.Name, !isDel ? propValue : null);
-							if(!isDel)
+							if(!isDel) {
 								args.Player.SendSuccessMessage("Set enter message of region {0} to '{1}'", region.Name, propValue);
+								if(!rt.HasEvent(Events.EnterMsg))
+									args.Player.SendWarningMessage("Add event ENTERMESSAGE if you want to make it work.");
+							}
 							else
 								args.Player.SendSuccessMessage("Removed enter message of region {0}.", region.Name);
 							break;
 						case "lm":
 							RtRegions.SetLeaveMessage(region.Name, !isDel ? propValue : null);
-							if(!isDel)
+							if(!isDel) {
 								args.Player.SendSuccessMessage("Set leave message of region {0} to '{1}'", region.Name, propValue);
+								if(!rt.HasEvent(Events.LeaveMsg))
+									args.Player.SendWarningMessage("Add event LEAVEMESSAGE if you want to make it work.");
+							}
 							else
 								args.Player.SendSuccessMessage("Removed leave message of region {0}.", region.Name);
 							break;
 						case "msg":
 							RtRegions.SetMessage(region.Name, !isDel ? propValue : null);
-							if(!isDel)
+							if(!isDel) {
 								args.Player.SendSuccessMessage("Set message of region {0} to '{1}'", region.Name, propValue);
+								if(!rt.HasEvent(Events.Message))
+									args.Player.SendWarningMessage("Add event MESSAGE if you want to make it work.");
+							}
 							else
 								args.Player.SendSuccessMessage("Removed message of region {0}.", region.Name);
 							break;
@@ -439,11 +448,15 @@ namespace RegionTrigger {
 								throw new Exception("Invalid interval. (Interval must be integer >= 0)");
 							RtRegions.SetMsgInterval(region.Name, itv);
 							args.Player.SendSuccessMessage("Set message interval of region {0} to {1}.", region.Name, itv);
+							if(!rt.HasEvent(Events.Message))
+								args.Player.SendWarningMessage("Add event MESSAGE if you want to make it work.");
 							break;
 						case "tg":
 							if(!isDel && propValue != "null") {
 								RtRegions.SetTempGroup(region.Name, propValue);
 								args.Player.SendSuccessMessage("Set tempgroup of region {0} to {1}.", region.Name, propValue);
+								if(!rt.HasEvent(Events.TempGroup))
+									args.Player.SendWarningMessage("Add event TEMPGROUP if you want to make it work.");
 							} else {
 								RtRegions.SetTempGroup(region.Name, null);
 								args.Player.SendSuccessMessage("Removed tempgroup of region {0}.", region.Name);
