@@ -11,9 +11,9 @@ using TShockAPI.Hooks;
 namespace RegionTrigger {
 	[ApiVersion(1, 23)]
 	[SuppressMessage("ReSharper", "InvertIf")]
-	public class RegionTrigger : TerrariaPlugin {
+	public sealed class RegionTrigger : TerrariaPlugin {
 		public const string Rtdataname = "rtply";
-		public RtRegionManager RtRegions;
+		internal RtRegionManager RtRegions;
 
 		public override string Name => "RegionTrigger";
 		public override string Author => "MistZZT";
@@ -35,6 +35,7 @@ namespace RegionTrigger {
 			RegionHooks.RegionEntered += OnRegionEntered;
 			RegionHooks.RegionLeft += OnRegionLeft;
 			RegionHooks.RegionDeleted += OnRegionDeleted;
+			PlayerHooks.PlayerPermission += OnPlayerPermission;
 		}
 
 		protected override void Dispose(bool disposing) {
@@ -52,6 +53,7 @@ namespace RegionTrigger {
 				RegionHooks.RegionEntered -= OnRegionEntered;
 				RegionHooks.RegionLeft -= OnRegionLeft;
 				RegionHooks.RegionDeleted -= OnRegionDeleted;
+				PlayerHooks.PlayerPermission -= OnPlayerPermission;
 			}
 			base.Dispose(disposing);
 		}
@@ -157,6 +159,17 @@ namespace RegionTrigger {
 			} catch(Exception ex) {
 				TShock.Log.ConsoleError("[RegionTrigger] {0}", ex.Message);
 			}
+		}
+
+		private void OnPlayerPermission(PlayerPermissionEventArgs args) {
+			if(args.Player.CurrentRegion == null)
+				return;
+			var rt = RtRegions.GetRtRegionByRegionId(args.Player.CurrentRegion.ID);
+			if(rt == null || !rt.HasEvent(Events.TempPermission))
+				return;
+
+			if(rt.HasPermission(args.Permission) && !args.Player.HasPermission("regiontrigger.bypass.tempperm"))
+				args.Handled = true;
 		}
 
 		private void OnRegionLeft(RegionHooks.RegionLeftEventArgs args) {
@@ -298,7 +311,8 @@ namespace RegionTrigger {
 			new[] {"lm", "leavemsg"},
 			new[] {"msg", "message"},
 			new[] {"mi", "msgitv", "msginterval", "messageinterval"},
-			new[] {"tg", "tempgroup"}
+			new[] {"tg", "tempgroup"},
+			new[] {"tp", "perm", "tempperm", "temppermission"}
 		};
 
 		[SuppressMessage("ReSharper", "SwitchStatementMissingSomeCases")]
@@ -460,6 +474,16 @@ namespace RegionTrigger {
 							} else {
 								RtRegions.SetTempGroup(region.Name, null);
 								args.Player.SendSuccessMessage("Removed tempgroup of region {0}.", region.Name);
+							}
+							break;
+						case "tp":
+							var permissions = propValue.ToLower().Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
+							if(!isDel) {
+								RtRegions.AddPermissions(region.Name, permissions);
+								args.Player.SendSuccessMessage("Region {0} has been modified successfully.", region.Name);
+							} else {
+								RtRegions.DeletePermissions(region.Name, permissions);
+								args.Player.SendSuccessMessage("Region {0} has been modified successfully.", region.Name);
 							}
 							break;
 					}

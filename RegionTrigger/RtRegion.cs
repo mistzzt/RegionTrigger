@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using Terraria;
 using TShockAPI;
 using TShockAPI.DB;
 
 namespace RegionTrigger {
-	public class RtRegion {
+	internal sealed class RtRegion {
 		public int Id { get; set; }
 		public string EnterMsg { get; set; }
 		public string LeaveMsg { get; set; }
@@ -78,6 +79,15 @@ namespace RegionTrigger {
 			}
 		}
 
+		private readonly List<string> _permissions = new List<string>();
+		public string Permissions {
+			get { return string.Join(",", _permissions); }
+			set {
+				_permissions.Clear();
+				value?.Split(',').ForEach(AddPermission);
+			}
+		}
+
 		public RtRegion(int id, int rid) {
 			Id = id;
 			Region = TShock.Regions.GetRegionByID(rid);
@@ -108,5 +118,28 @@ namespace RegionTrigger {
 
 		public bool RemoveBannedItem(string itemName)
 			=> _itembans.Remove(itemName);
+
+		public void AddPermission(string permission) {
+			if(string.IsNullOrWhiteSpace(permission))
+				return;
+			var pLower = permission.ToLower();
+			if(_permissions.Contains(pLower))
+				return;
+			_permissions.Add(pLower);
+		}
+
+		public void RemovePermission(string permission) {
+			if(string.IsNullOrWhiteSpace(permission))
+				return;
+			var pLower = permission.ToLower();
+			_permissions.Remove(pLower);
+		}
+
+		public bool HasPermission(string permission) {
+			if(string.IsNullOrWhiteSpace(permission))
+				return false;
+			var pLower = permission.ToLower();
+			return _permissions.Contains(pLower);
+		}
 	}
 }

@@ -5,7 +5,7 @@ using System.Linq;
 using TShockAPI;
 
 namespace RegionTrigger {
-	class Events {
+	internal static class Events {
 		[Description("Represents a event that does nothing. It can't be added.")]
 		public static readonly string None = "none"; // ok
 
@@ -50,6 +50,9 @@ namespace RegionTrigger {
 
 		[Description("(DONT WORK!)Changes perspectives. For gaming use.")]
 		public static readonly string ThirdView = "thirdview";
+
+		[Description("Temporary permissions for players in region.")]
+		public static readonly string TempPermission = "temppermission"; // ok
 
 		public static List<string> EventsList = new List<string>();
 		public static Dictionary<string, string> EventsDescriptions = new Dictionary<string, string>();

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using MySql.Data.MySqlClient;
@@ -10,7 +9,7 @@ using TShockAPI;
 using TShockAPI.DB;
 
 namespace RegionTrigger {
-	public class RtRegionManager {
+	internal sealed class RtRegionManager {
 
 		public readonly List<RtRegion> Regions = new List<RtRegion>();
 
@@ -30,7 +29,8 @@ namespace RegionTrigger {
 									 new SqlColumn("TempGroup", MySqlDbType.String, 32),
 									 new SqlColumn("Itembans", MySqlDbType.Text),
 									 new SqlColumn("Projbans", MySqlDbType.Text),
-									 new SqlColumn("Tilebans", MySqlDbType.Text)
+									 new SqlColumn("Tilebans", MySqlDbType.Text),
+									 new SqlColumn("Permissions", MySqlDbType.Text)
 				);
 			var creator = new SqlTableCreator(db,
 											  db.GetSqlType() == SqlType.Sqlite
@@ -61,6 +61,7 @@ namespace RegionTrigger {
 						var itemb = reader.Get<string>("Itembans");
 						var projb = reader.Get<string>("Projbans");
 						var tileb = reader.Get<string>("Tilebans");
+						var perms = reader.Get<string>("Permissions");
 
 						var temp = TShock.Groups.GroupExists(tempgroup)
 							? TShock.Utils.GetGroup(tempgroup)
@@ -74,7 +75,8 @@ namespace RegionTrigger {
 							TempGroup = temp,
 							Itembans = itemb,
 							Projbans = projb,
-							Tilebans = tileb
+							Tilebans = tileb,
+							Permissions = perms
 						};
 
 						if(region.HasEvent(Events.TempGroup) && region.TempGroup == null)
@@ -394,6 +396,34 @@ namespace RegionTrigger {
 				return;
 
 			rt.Tilebans = origin;
+			throw new Exception("Database error: No affected rows.");
+		}
+
+		public void AddPermissions(string regionName, List<string> permissions) {
+			var rt = GetRtRegionByName(regionName);
+			if(rt == null)
+				throw new Exception("Invalid region!");
+			var origin = rt.Permissions;
+			permissions.ForEach(per => rt.AddPermission(per));
+
+			if(_database.Query("UPDATE RtRegions SET Permissions = @0 WHERE Id = @1", rt.Permissions, rt.Id) != 0)
+				return;
+
+			rt.Permissions = origin;
+			throw new Exception("Database error: No affected rows.");
+		}
+
+		public void DeletePermissions(string regionName, List<string> permissions) {
+			var rt = GetRtRegionByName(regionName);
+			if(rt == null)
+				throw new Exception("Invalid region!");
+			var origin = rt.Permissions;
+			permissions.ForEach(per => rt.RemovePermission(per));
+
+			if(_database.Query("UPDATE RtRegions SET Permissions = @0 WHERE Id = @1", rt.Permissions, rt.Id) != 0)
+				return;
+
+			rt.Permissions = origin;
 			throw new Exception("Database error: No affected rows.");
 		}
 
