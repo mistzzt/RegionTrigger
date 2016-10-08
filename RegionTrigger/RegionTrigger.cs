@@ -9,7 +9,7 @@ using TShockAPI;
 using TShockAPI.Hooks;
 
 namespace RegionTrigger {
-	[ApiVersion(1, 24)]
+	[ApiVersion(1, 25)]
 	[SuppressMessage("ReSharper", "InvertIf")]
 	public sealed class RegionTrigger : TerrariaPlugin {
 		public const string Rtdataname = "rtply";
