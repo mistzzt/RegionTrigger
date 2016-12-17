@@ -3,13 +3,14 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Reflection;
+using Microsoft.Xna.Framework;
 using TerrariaApi.Server;
 using Terraria;
 using TShockAPI;
 using TShockAPI.Hooks;
 
 namespace RegionTrigger {
-	[ApiVersion(1, 25)]
+	[ApiVersion(2, 0)]
 	[SuppressMessage("ReSharper", "InvertIf")]
 	public sealed class RegionTrigger : TerrariaPlugin {
 		public const string Rtdataname = "rtply";
