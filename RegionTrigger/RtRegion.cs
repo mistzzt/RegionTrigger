@@ -25,7 +25,8 @@ namespace RegionTrigger
 
 		private readonly List<string> _events = new List<string>();
 
-		public string Events {
+		public string Events
+		{
 			get
 			{
 				return _events.Count == 0
@@ -45,7 +46,8 @@ namespace RegionTrigger
 
 		private readonly List<string> _itembans = new List<string>();
 
-		public string Itembans {
+		public string Itembans
+		{
 			get
 			{
 				return string.Join(",", _itembans);
