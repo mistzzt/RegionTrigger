@@ -4,8 +4,10 @@ using System.ComponentModel;
 using System.Linq;
 using TShockAPI;
 
-namespace RegionTrigger {
-	internal static class Events {
+namespace RegionTrigger
+{
+	internal static class Events
+	{
 		[Description("Represents a event that does nothing. It can't be added.")]
 		public static readonly string None = "none"; // ok
 
@@ -45,23 +47,17 @@ namespace RegionTrigger {
 		[Description("Disallows players from entering regions.")]
 		public static readonly string Private = "private"; // ok
 
-		[Description("(DONT WORK!)Enables region chatting.")]
-		public static readonly string RegionChat = "regionchat";
-
-		[Description("(DONT WORK!)Changes perspectives. For gaming use.")]
-		public static readonly string ThirdView = "thirdview";
-
 		[Description("Temporary permissions for players in region.")]
 		public static readonly string TempPermission = "temppermission"; // ok
 
 		public static List<string> EventsList = new List<string>();
 		public static Dictionary<string, string> EventsDescriptions = new Dictionary<string, string>();
 
-		static Events() {
-			Type t = typeof(Events);
-
-			foreach(var fieldInfo in t.GetFields()
-				.Where(f => f.IsPublic && f.FieldType == typeof(string))) {
+		static Events()
+		{
+			foreach (var fieldInfo in typeof(Events).GetFields()
+				.Where(f => f.IsPublic && f.FieldType == typeof(string)))
+			{
 
 				EventsList.Add((string)fieldInfo.GetValue(null));
 
@@ -80,8 +76,9 @@ namespace RegionTrigger {
 		/// </summary>
 		/// <param name="events">Events splited by ','</param>
 		/// <returns>T1: Valid events & T2: Invalid events</returns>
-		internal static Tuple<string, string> ValidateEvents(string events) {
-			if(string.IsNullOrWhiteSpace(events))
+		internal static Tuple<string, string> ValidateEvents(string events)
+		{
+			if (string.IsNullOrWhiteSpace(events))
 				return new Tuple<string, string>(None, null);
 
 			var result = ValidateEventsList(events);
@@ -96,8 +93,9 @@ namespace RegionTrigger {
 		/// </summary>
 		/// <param name="events">Events splited by ','</param>
 		/// <returns>T1: Valid events & T2: Invalid events</returns>
-		internal static Tuple<List<string>, List<string>> ValidateEventsList(string events) {
-			if(string.IsNullOrWhiteSpace(events))
+		internal static Tuple<List<string>, List<string>> ValidateEventsList(string events)
+		{
+			if (string.IsNullOrWhiteSpace(events))
 				return new Tuple<List<string>, List<string>>(new List<string> { None }, null);
 
 			List<string> valid = new List<string>(),
@@ -106,8 +104,9 @@ namespace RegionTrigger {
 
 			splitedEvents
 				.Where(e => !string.IsNullOrWhiteSpace(e))
-				.ForEach(e => {
-					if(Contains(e))
+				.ForEach(e =>
+				{
+					if (Contains(e))
 						valid.Add(e);
 					else
 						invalid.Add(e);

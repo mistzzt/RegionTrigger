@@ -6,7 +6,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("MistZZT")]
 [assembly: AssemblyProduct("RegionTrigger")]
-[assembly: AssemblyCopyright("Copyright © MistZZT 2016")]
+[assembly: AssemblyCopyright("Copyright © MistZZT 2017")]
 [assembly: AssemblyTrademark("MistZZT")]
 [assembly: AssemblyCulture("en-US")]
 
@@ -14,5 +14,5 @@ using System.Runtime.InteropServices;
 
 [assembly: Guid("2753ee98-d955-4711-bfe5-e8d29ef2633b")]
 
-[assembly: AssemblyVersion("1.6.0.0")]
-[assembly: AssemblyFileVersion("1.6.0.0")]
+[assembly: AssemblyVersion("1.7.0.0")]
+[assembly: AssemblyFileVersion("1.7.0.0")]
