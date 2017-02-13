@@ -2,19 +2,19 @@
 
 RegionTrigger is a **TShock-based** plugin aimed to trigger special events when players enter a region.
 
-Also in **Chinese** now!
+> 本插件有中文版本! 查看[中文教程][cn].. [下载链接][cndown]..
 
 ## Requirement:
 - API Version: 2.0
-- TShock Version: 4.3.21
+- TShock Version: 4.3.22
 
 ## Commands:
 - `/rt set-<property> <region> [--del] <value>` -- *Sets regions*
-  ### Available properties:
-  - Event: `event(e)`
-  - Bans: `projban(pb), itemban(ib), tileban(tb)`
-  - Messages: `entermsg(em), leavemsg(lm), messageinterval(msgitv/mi)`
-  - Group: `tempgroup(tg)`
+>  ### Available properties:
+>  - Event: `event(e)`
+>  - Bans: `projban(pb), itemban(ib), tileban(tb)`
+>  - Messages: `entermsg(em), leavemsg(lm), messageinterval(msgitv/mi)`
+>  - Group: `tempgroup(tg)`
 
   **e.g.** `/rt set-event main-region nopvp`
           ` /rt set-tempgroup main-region admin`
@@ -31,9 +31,10 @@ You can also find this plugin in [TShock offical forum][tshockco].
 - `regiontrigger.bypass.projban` -- *Use banned projectiles in regions.*
 - `regiontrigger.bypass.itemban` -- *Use banned items in regions.*
 - `regiontrigger.bypass.tempgroup` -- *Player won't be switched to tempgroup.*
-- `regiontrigger.bypass.pvp` -- *Player will be able to toggle his PvP status.*
-- `regiontrigger.bypass.nopvp` -- *Player will be able to toggle his PvP status.*
+- `regiontrigger.bypass.pvp` -- *Players will be able to toggle their PvP status.*
+- `regiontrigger.bypass.nopvp` -- *Players will be able to toggle their PvP status.*
 - `regiontrigger.bypass.private` -- *Enters private regions.*
+- `regiontrigger.bypass.tempperm` -- *Skip temp permissions in region.*
 
 ## Available events now:
 - `EnterMsg` - *Sends player a specific message when entering regions.*
@@ -47,6 +48,9 @@ You can also find this plugin in [TShock offical forum][tshockco].
 - `Godmode` - *Turns players' godmode on when they are in regions.*
 - `Pvp` - *Turns players' PvP status on when they are in regions.*
 - `NoPvp` - *Disallows players from enabling their PvP mode.*
+- `InvariantPvp` - *Disallows players from changing their pvp mode.*
 - `Private` - *Disallows players without permission from entering region.*
 
    [tshockco]: <https://tshock.co/xf/index.php?resources/regiontrigger.157/>
+   [cn]: <https://github.com/mistzzt/RegionTrigger/blob/adv-cn_master/README.md>
+   [cndown]: <https://github.com/mistzzt/RegionTrigger/releases>
