@@ -53,6 +53,9 @@ namespace RegionTrigger
 		[Description("Temporary permissions for players in region.")]
 		public static readonly string TempPermission = "temppermission"; // ok
 
+		[Description("Disallows players from dropping items")]
+		public static readonly string NoItem = "noitem"; // ok
+
 		public static List<string> EventsList = new List<string>();
 		public static Dictionary<string, string> EventsDescriptions = new Dictionary<string, string>();
 

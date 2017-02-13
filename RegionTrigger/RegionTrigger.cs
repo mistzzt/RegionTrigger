@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
+using System.IO.Streams;
 using System.Linq;
 using System.Reflection;
 using Microsoft.Xna.Framework;
@@ -33,6 +35,7 @@ namespace RegionTrigger
 			ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInit, -10);
 			ServerApi.Hooks.NetGreetPlayer.Register(this, OnGreetPlayer);
 			ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
+			ServerApi.Hooks.NetGetData.Register(this, OnGetData, 2000);
 
 			GetDataHandlers.TogglePvp += OnTogglePvp;
 			GetDataHandlers.TileEdit += OnTileEdit;
@@ -50,6 +53,7 @@ namespace RegionTrigger
 				ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInit);
 				ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGreetPlayer);
 				ServerApi.Hooks.GameUpdate.Deregister(this, OnUpdate);
+				ServerApi.Hooks.NetGetData.Deregister(this, OnGetData);
 
 				GetDataHandlers.TogglePvp -= OnTogglePvp;
 				GetDataHandlers.TileEdit -= OnTileEdit;
@@ -118,6 +122,37 @@ namespace RegionTrigger
 			{
 				args.Player.SendTileSquare(args.X, args.Y, 1);
 				args.Player.SendErrorMessage("You do not have permission to place this tile.");
+				args.Handled = true;
+			}
+		}
+
+		private void OnGetData(GetDataEventArgs args)
+		{
+			if (args.Handled)
+				return;
+
+			if (args.MsgID != PacketTypes.ItemDrop && args.MsgID != PacketTypes.UpdateItemDrop)
+				return;
+
+			using (var data = new MemoryStream(args.Msg.readBuffer, args.Index, args.Length - 1))
+			{
+				var id = data.ReadInt16();
+				var pos = new Vector2(data.ReadSingle(), data.ReadSingle());
+
+				if (id < 400)
+					return;
+
+				var rt = RtRegions.GetTopRegion(RtRegions.Regions.Where(r => r.Region.InArea((int)(pos.X / 16), (int)(pos.Y / 16))));
+
+				if (rt?.HasEvent(Events.NoItem) != true)
+					return;
+
+				var player = TShock.Players[args.Msg.whoAmI];
+				if (player == null || player.HasPermission("regiontrigger.bypass.itemdrop"))
+					return;
+
+				player.SendErrorMessage("你不能在当前区域丢东西!");
+				player.Disable("非法丢东西");
 				args.Handled = true;
 			}
 		}
