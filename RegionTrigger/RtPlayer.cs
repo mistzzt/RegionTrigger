@@ -10,6 +10,8 @@ namespace RegionTrigger
 
 		public bool? ForcePvP = null;
 
+		public bool CanTogglePvP = true;
+
 		public RtRegion CurrentRegion;
 
 		public static RtPlayer GetPlayerInfo(TSPlayer player)

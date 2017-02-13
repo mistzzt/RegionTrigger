@@ -44,6 +44,9 @@ namespace RegionTrigger
 		[Description("Disallows players from enabling their pvp mode.")]
 		public static readonly string NoPvp = "nopvp"; // ok
 
+		[Description("Disallows players from changing their pvp mode.")]
+		public static readonly string InvariantPvp = "invariantpvp"; // ok
+
 		[Description("Disallows players from entering regions.")]
 		public static readonly string Private = "private"; // ok
 

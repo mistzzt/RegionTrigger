@@ -94,7 +94,9 @@ namespace RegionTrigger
 			var ply = TShock.Players[args.PlayerId];
 			var dt = RtPlayer.GetPlayerInfo(ply);
 
-			if (dt.ForcePvP == true && !args.Pvp || dt.ForcePvP == false && args.Pvp)
+			if ((dt.ForcePvP == true && !args.Pvp) ||
+				(dt.ForcePvP == false && args.Pvp) ||
+				!dt.CanTogglePvP)
 			{
 				ply.SendErrorMessage("You can't change your PvP status in this region!");
 				ply.SendData(PacketTypes.TogglePvp, "", args.PlayerId);
@@ -203,9 +205,10 @@ namespace RegionTrigger
 				player.SendInfoMessage("You are no longer in godmode!");
 			}
 
-			if ((region.HasEvent(Events.Pvp) && data.ForcePvP == true) || (region.HasEvent(Events.NoPvp) && data.ForcePvP == false))
+			if (region.HasEvent(Events.Pvp) || region.HasEvent(Events.NoPvp) || region.HasEvent(Events.InvariantPvp))
 			{
 				data.ForcePvP = null;
+				data.CanTogglePvP = true;
 				player.SendInfoMessage("You can toggle your PvP status now.");
 			}
 		}
@@ -272,6 +275,11 @@ namespace RegionTrigger
 					TSPlayer.All.SendData(PacketTypes.TogglePvp, "", player.Index);
 					player.SendInfoMessage("You can't enable PvP in this region!");
 				}
+			}
+
+			if (rt.HasEvent(Events.InvariantPvp) && !player.HasPermission("regiontrigger.bypass.inpvp"))
+			{
+				data.CanTogglePvP = false;
 			}
 
 			if (rt.HasEvent(Events.Private) && !player.HasPermission("regiontrigger.bypass.private"))
