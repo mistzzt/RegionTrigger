@@ -15,8 +15,6 @@ namespace RegionTrigger
 	[SuppressMessage("ReSharper", "InvertIf")]
 	public sealed class RegionTrigger : TerrariaPlugin
 	{
-		public const string Rtdataname = "rtply";
-
 		internal RtRegionManager RtRegions;
 
 		public override string Name => "RegionTrigger";
@@ -34,15 +32,12 @@ namespace RegionTrigger
 			ServerApi.Hooks.GameInitialize.Register(this, OnInitialize, -10);
 			ServerApi.Hooks.GamePostInitialize.Register(this, OnPostInit, -10);
 			ServerApi.Hooks.NetGreetPlayer.Register(this, OnGreetPlayer);
-			ServerApi.Hooks.ServerLeave.Register(this, OnLeave);
 			ServerApi.Hooks.GameUpdate.Register(this, OnUpdate);
 
 			GetDataHandlers.TogglePvp += OnTogglePvp;
 			GetDataHandlers.TileEdit += OnTileEdit;
 			GetDataHandlers.NewProjectile += OnNewProjectile;
 			GetDataHandlers.PlayerUpdate += OnPlayerUpdate;
-			RegionHooks.RegionEntered += OnRegionEntered;
-			RegionHooks.RegionLeft += OnRegionLeft;
 			RegionHooks.RegionDeleted += OnRegionDeleted;
 			PlayerHooks.PlayerPermission += OnPlayerPermission;
 		}
@@ -54,15 +49,12 @@ namespace RegionTrigger
 				ServerApi.Hooks.GameInitialize.Deregister(this, OnInitialize);
 				ServerApi.Hooks.GamePostInitialize.Deregister(this, OnPostInit);
 				ServerApi.Hooks.NetGreetPlayer.Deregister(this, OnGreetPlayer);
-				ServerApi.Hooks.ServerLeave.Deregister(this, OnLeave);
 				ServerApi.Hooks.GameUpdate.Deregister(this, OnUpdate);
 
 				GetDataHandlers.TogglePvp -= OnTogglePvp;
 				GetDataHandlers.TileEdit -= OnTileEdit;
 				GetDataHandlers.NewProjectile -= OnNewProjectile;
 				GetDataHandlers.PlayerUpdate -= OnPlayerUpdate;
-				RegionHooks.RegionEntered -= OnRegionEntered;
-				RegionHooks.RegionLeft -= OnRegionLeft;
 				RegionHooks.RegionDeleted -= OnRegionDeleted;
 				PlayerHooks.PlayerPermission -= OnPlayerPermission;
 			}
@@ -83,12 +75,7 @@ namespace RegionTrigger
 
 		private static void OnGreetPlayer(GreetPlayerEventArgs args)
 		{
-			TShock.Players[args.Who]?.SetData(Rtdataname, new RtPlayer());
-		}
-
-		private static void OnLeave(LeaveEventArgs args)
-		{
-			TShock.Players[args.Who]?.RemoveData(Rtdataname);
+			RtPlayer.GetPlayerInfo(TShock.Players[args.Who]);
 		}
 
 		private DateTime _lastCheck = DateTime.UtcNow;
@@ -105,25 +92,13 @@ namespace RegionTrigger
 		private static void OnTogglePvp(object sender, GetDataHandlers.TogglePvpEventArgs args)
 		{
 			var ply = TShock.Players[args.PlayerId];
-			var dt = ply.GetData<RtPlayer>(Rtdataname);
-			if (dt == null)
-				return;
+			var dt = RtPlayer.GetPlayerInfo(ply);
 
-			if (dt.ForcePvP == true && !args.Pvp)
+			if (dt.ForcePvP == true && !args.Pvp || dt.ForcePvP == false && args.Pvp)
 			{
 				ply.SendErrorMessage("You can't change your PvP status in this region!");
 				ply.SendData(PacketTypes.TogglePvp, "", args.PlayerId);
 				args.Handled = true;
-				return;
-			}
-
-			if (dt.ForcePvP == false && args.Pvp)
-			{
-				ply.SendErrorMessage("You can't change your PvP status in this region!");
-				ply.SendData(PacketTypes.TogglePvp, "", args.PlayerId);
-				args.Handled = true;
-				// ReSharper disable once RedundantJumpStatement
-				return;
 			}
 		}
 
@@ -131,7 +106,9 @@ namespace RegionTrigger
 		{
 			if (args.Action != GetDataHandlers.EditAction.PlaceTile)
 				return;
+
 			var rt = RtRegions.GetTopRegion(RtRegions.Regions.Where(r => r.Region.InArea(args.X, args.Y)));
+
 			if (rt?.HasEvent(Events.Tileban) != true)
 				return;
 
@@ -143,13 +120,12 @@ namespace RegionTrigger
 			}
 		}
 
-		private void OnNewProjectile(object sender, GetDataHandlers.NewProjectileEventArgs args)
+		private static void OnNewProjectile(object sender, GetDataHandlers.NewProjectileEventArgs args)
 		{
 			var ply = TShock.Players[args.Owner];
-			if (ply.CurrentRegion == null)
-				return;
-			var rt = RtRegions.GetRtRegionByRegionId(ply.CurrentRegion.ID);
-			if (rt == null || !rt.HasEvent(Events.Projban))
+			var rt = RtPlayer.GetPlayerInfo(ply).CurrentRegion;
+
+			if (rt?.HasEvent(Events.Projban) != true)
 				return;
 
 			if (rt.ProjectileIsBanned(args.Type) && !ply.HasPermission("regiontrigger.bypass.projban"))
@@ -160,13 +136,12 @@ namespace RegionTrigger
 			}
 		}
 
-		private void OnPlayerUpdate(object sender, GetDataHandlers.PlayerUpdateEventArgs args)
+		private static void OnPlayerUpdate(object sender, GetDataHandlers.PlayerUpdateEventArgs args)
 		{
 			var ply = TShock.Players[args.PlayerId];
-			if (ply.CurrentRegion == null)
-				return;
-			var rt = RtRegions.GetRtRegionByRegionId(ply.CurrentRegion.ID);
-			if (rt == null || !rt.HasEvent(Events.Itemban))
+			var rt = RtPlayer.GetPlayerInfo(ply).CurrentRegion;
+
+			if (rt?.HasEvent(Events.Itemban) != true)
 				return;
 
 			BitsByte control = args.Control;
@@ -195,11 +170,10 @@ namespace RegionTrigger
 			}
 		}
 
-		private void OnPlayerPermission(PlayerPermissionEventArgs args)
+		private static void OnPlayerPermission(PlayerPermissionEventArgs args)
 		{
-			if (args.Player.CurrentRegion == null)
-				return;
-			var rt = RtRegions.GetRtRegionByRegionId(args.Player.CurrentRegion.ID);
+			var rt = RtPlayer.GetPlayerInfo(args.Player).CurrentRegion;
+
 			if (rt?.HasEvent(Events.TempPermission) != true)
 				return;
 
@@ -207,139 +181,139 @@ namespace RegionTrigger
 				args.Handled = true;
 		}
 
-		private void OnRegionLeft(RegionHooks.RegionLeftEventArgs args)
+		private static void OnRegionLeft(TSPlayer player, RtRegion region, RtPlayer data)
 		{
-			var rt = RtRegions.GetRtRegionByRegionId(args.Region.ID);
-			if (rt == null)
-				return;
-			var dt = args.Player.GetData<RtPlayer>(Rtdataname);
-			if (dt == null)
-				return;
-
-			if (rt.HasEvent(Events.LeaveMsg))
+			if (region.HasEvent(Events.LeaveMsg))
 			{
-				if (string.IsNullOrWhiteSpace(rt.LeaveMsg))
-					args.Player.SendInfoMessage("You have left region {0}", args.Region.Name);
+				if (string.IsNullOrWhiteSpace(region.LeaveMsg))
+					player.SendInfoMessage("You have left region {0}", region.Region.Name);
 				else
-					args.Player.SendMessage(rt.LeaveMsg, Color.White);
+					player.SendMessage(region.LeaveMsg, Color.White);
 			}
 
-			if (rt.HasEvent(Events.TempGroup) && args.Player.tempGroup == rt.TempGroup)
+			if (region.HasEvent(Events.TempGroup) && player.tempGroup == region.TempGroup)
 			{
-				args.Player.tempGroup = null;
-				args.Player.SendInfoMessage("You are no longer in group {0}.", rt.TempGroup.Name);
+				player.tempGroup = null;
+				player.SendInfoMessage("You are no longer in group {0}.", region.TempGroup.Name);
 			}
 
-			if (rt.HasEvent(Events.Godmode))
+			if (region.HasEvent(Events.Godmode))
 			{
-				args.Player.GodMode = false;
-				args.Player.SendInfoMessage("You are no longer in godmode!");
+				player.GodMode = false;
+				player.SendInfoMessage("You are no longer in godmode!");
 			}
 
-			if ((rt.HasEvent(Events.Pvp) && dt.ForcePvP == true) || (rt.HasEvent(Events.NoPvp) && dt.ForcePvP == false))
+			if ((region.HasEvent(Events.Pvp) && data.ForcePvP == true) || (region.HasEvent(Events.NoPvp) && data.ForcePvP == false))
 			{
-				dt.ForcePvP = null;
-				args.Player.SendInfoMessage("You can toggle your PvP status now.");
+				data.ForcePvP = null;
+				player.SendInfoMessage("You can toggle your PvP status now.");
 			}
 		}
 
-		private void OnRegionEntered(RegionHooks.RegionEnteredEventArgs args)
+		private static void OnRegionEntered(TSPlayer player, RtPlayer data)
 		{
-			var rt = RtRegions.GetRtRegionByRegionId(args.Region.ID);
-			if (rt == null)
-				return;
-			var dt = args.Player.GetData<RtPlayer>(Rtdataname);
-			if (dt == null)
-				return;
+			var rt = data.CurrentRegion;
 
 			if (rt.HasEvent(Events.EnterMsg))
 			{
 				if (string.IsNullOrWhiteSpace(rt.EnterMsg))
-					args.Player.SendInfoMessage("You have entered region {0}", args.Region.Name);
+					player.SendInfoMessage("You have entered region {0}", rt.Region.Name);
 				else
-					args.Player.SendMessage(rt.EnterMsg, Color.White);
+					player.SendMessage(rt.EnterMsg, Color.White);
 			}
 
 			if (rt.HasEvent(Events.Message) && !string.IsNullOrWhiteSpace(rt.Message))
 			{
-				args.Player.SendInfoMessage(rt.Message, args.Region.Name);
+				player.SendInfoMessage(rt.Message);
 			}
 
-			if (rt.HasEvent(Events.TempGroup) && rt.TempGroup != null && !args.Player.HasPermission("regiontrigger.bypass.tempgroup"))
+			if (rt.HasEvent(Events.TempGroup) && rt.TempGroup != null && !player.HasPermission("regiontrigger.bypass.tempgroup"))
 			{
 				if (rt.TempGroup == null)
-					TShock.Log.ConsoleError("TempGroup in region '{0}' is not valid!", args.Region.Name);
+					TShock.Log.ConsoleError("TempGroup in region '{0}' is not valid!", rt.Region.Name);
 				else
 				{
-					args.Player.tempGroup = rt.TempGroup;
-					args.Player.SendInfoMessage("Your group has been changed to {0} in this region.", rt.TempGroup.Name);
+					player.tempGroup = rt.TempGroup;
+					player.SendInfoMessage("Your group has been changed to {0} in this region.", rt.TempGroup.Name);
 				}
 			}
 
-			if (rt.HasEvent(Events.Kill) && !args.Player.HasPermission("regiontrigger.bypass.kill"))
+			if (rt.HasEvent(Events.Kill) && !player.HasPermission("regiontrigger.bypass.kill"))
 			{
-				args.Player.DamagePlayer(9999);
-				args.Player.SendInfoMessage("You were killed!");
+				player.KillPlayer();
+				player.SendInfoMessage("You were killed!");
 			}
 
 			if (rt.HasEvent(Events.Godmode))
 			{
-				args.Player.GodMode = true;
-				args.Player.SendInfoMessage("You are now in godmode!");
+				player.GodMode = true;
+				player.SendInfoMessage("You are now in godmode!");
 			}
 
-			if (rt.HasEvent(Events.Pvp) && !args.Player.HasPermission("regiontrigger.bypass.pvp"))
+			if (rt.HasEvent(Events.Pvp) && !player.HasPermission("regiontrigger.bypass.pvp"))
 			{
-				dt.ForcePvP = true;
-				if (!args.Player.TPlayer.hostile)
+				data.ForcePvP = true;
+				if (!player.TPlayer.hostile)
 				{
-					args.Player.TPlayer.hostile = true;
-					args.Player.SendData(PacketTypes.TogglePvp, "", args.Player.Index);
-					TSPlayer.All.SendData(PacketTypes.TogglePvp, "", args.Player.Index);
-					args.Player.SendInfoMessage("Your PvP status is forced enabled in this region!");
+					player.TPlayer.hostile = true;
+					player.SendData(PacketTypes.TogglePvp, "", player.Index);
+					TSPlayer.All.SendData(PacketTypes.TogglePvp, "", player.Index);
+					player.SendInfoMessage("Your PvP status is forced enabled in this region!");
 				}
 			}
 
-			if (rt.HasEvent(Events.NoPvp) && !args.Player.HasPermission("regiontrigger.bypass.nopvp"))
+			if (rt.HasEvent(Events.NoPvp) && !player.HasPermission("regiontrigger.bypass.nopvp"))
 			{
-				dt.ForcePvP = false;
-				if (args.Player.TPlayer.hostile)
+				data.ForcePvP = false;
+				if (player.TPlayer.hostile)
 				{
-					args.Player.TPlayer.hostile = false;
-					args.Player.SendData(PacketTypes.TogglePvp, "", args.Player.Index);
-					TSPlayer.All.SendData(PacketTypes.TogglePvp, "", args.Player.Index);
-					args.Player.SendInfoMessage("You can't enable PvP in this region!");
+					player.TPlayer.hostile = false;
+					player.SendData(PacketTypes.TogglePvp, "", player.Index);
+					TSPlayer.All.SendData(PacketTypes.TogglePvp, "", player.Index);
+					player.SendInfoMessage("You can't enable PvP in this region!");
 				}
 			}
 
-			if (rt.HasEvent(Events.Private) && !args.Player.HasPermission("regiontrigger.bypass.private"))
+			if (rt.HasEvent(Events.Private) && !player.HasPermission("regiontrigger.bypass.private"))
 			{
-				args.Player.Spawn();
-				args.Player.SendErrorMessage("You don't have permission to enter that region.");
+				player.Spawn();
+				player.SendErrorMessage("You don't have permission to enter that region.");
 			}
 		}
 
 		private void OnSecondUpdate()
 		{
-			foreach (var ply in TShock.Players.Where(p => p != null && p.Active))
+			foreach (var player in TShock.Players.Where(p => p?.Active == true))
 			{
-				if (ply.CurrentRegion == null)
-					return;
+				var dt = RtPlayer.GetPlayerInfo(player);
+				var oldRegion = dt.CurrentRegion;
+				dt.CurrentRegion = RtRegions.GetCurrentRegion(player);
 
-				var rt = RtRegions.GetRtRegionByRegionId(ply.CurrentRegion.ID);
-				var dt = ply.GetData<RtPlayer>(Rtdataname);
-				if (rt == null || dt == null)
-					return;
-
-				if (rt.HasEvent(Events.Message) && !string.IsNullOrWhiteSpace(rt.Message) && rt.MsgInterval != 0)
+				if (dt.CurrentRegion != oldRegion)
 				{
-					if (dt.MsgCd < rt.MsgInterval)
+					if (oldRegion != null)
+					{
+						OnRegionLeft(player, oldRegion, dt);
+					}
+
+					if (dt.CurrentRegion != null)
+					{
+						OnRegionEntered(player, dt);
+					}
+				}
+
+				if (dt.CurrentRegion == null)
+					return;
+
+				if (dt.CurrentRegion.HasEvent(Events.Message) && !string.IsNullOrWhiteSpace(dt.CurrentRegion.Message) && dt.CurrentRegion.MsgInterval != 0)
+				{
+					if (dt.MsgCd < dt.CurrentRegion.MsgInterval)
 					{
 						dt.MsgCd++;
 					}
 					else
 					{
-						ply.SendInfoMessage(rt.Message);
+						player.SendInfoMessage(dt.CurrentRegion.Message);
 						dt.MsgCd = 0;
 					}
 				}

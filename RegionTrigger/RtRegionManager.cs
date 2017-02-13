@@ -484,6 +484,11 @@ namespace RegionTrigger
 			return ret;
 		}
 
+		public RtRegion GetCurrentRegion(TSPlayer player)
+		{
+			return GetTopRegion(Regions.Where(r => r.Region.InArea(player.TileX, player.TileY)));
+		}
+
 		public class RegionDefinedException : Exception
 		{
 			public readonly string RegionName;
