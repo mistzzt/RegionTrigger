@@ -346,7 +346,7 @@ namespace RegionTrigger
 				}
 
 				if (dt.CurrentRegion == null)
-					return;
+					continue;
 
 				if (dt.CurrentRegion.HasEvent(Events.Message) && !string.IsNullOrWhiteSpace(dt.CurrentRegion.Message) && dt.CurrentRegion.MsgInterval != 0)
 				{
