@@ -178,5 +178,29 @@ namespace RegionTrigger
 			var pLower = permission.ToLower();
 			return _permissions.Contains(pLower);
 		}
+
+		internal static RtRegion FromReader(QueryResult reader)
+		{
+			var groupName = reader.Get<string>("TempGroup");
+
+			var region = new RtRegion(reader.Get<int>("Id"), reader.Get<int>("RegionId"))
+			{
+				Events = reader.Get<string>("Events") ?? global::RegionTrigger.Events.None,
+				EnterMsg = reader.Get<string>("EnterMsg"),
+				LeaveMsg = reader.Get<string>("LeaveMsg"),
+				Message = reader.Get<string>("Message"),
+				MsgInterval = reader.Get<int?>("MessageInterval") ?? 0,
+				TempGroup = TShock.Groups.GetGroupByName(groupName),
+				Itembans = reader.Get<string>("Itembans"),
+				Projbans = reader.Get<string>("Projbans"),
+				Tilebans = reader.Get<string>("Tilebans"),
+				Permissions = reader.Get<string>("Permissions")
+			};
+
+			if (region.TempGroup == null && region.HasEvent(global::RegionTrigger.Events.TempGroup))
+				TShock.Log.ConsoleError("[RegionTrigger] TempGroup '{0}' of region '{1}' is invalid!", groupName, region.Region.Name);
+
+			return region;
+		}
 	}
 }

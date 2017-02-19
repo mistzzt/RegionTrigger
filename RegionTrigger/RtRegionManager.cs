@@ -57,40 +57,7 @@ namespace RegionTrigger
 
 					while (reader.Read())
 					{
-						var id = reader.Get<int>("Id");
-						var regionId = reader.Get<int>("RegionId");
-						var events = reader.Get<string>("Events");
-						var entermsg = reader.Get<string>("EnterMsg");
-						var leavemsg = reader.Get<string>("LeaveMsg");
-						var msg = reader.Get<string>("Message");
-						var msgitv = reader.Get<int?>("MessageInterval");
-						var tempgroup = reader.Get<string>("TempGroup");
-						var itemb = reader.Get<string>("Itembans");
-						var projb = reader.Get<string>("Projbans");
-						var tileb = reader.Get<string>("Tilebans");
-						var perms = reader.Get<string>("Permissions");
-
-						var temp = TShock.Groups.GroupExists(tempgroup)
-							? TShock.Utils.GetGroup(tempgroup)
-							: null;
-						var region = new RtRegion(id, regionId)
-						{
-							Events = events ?? Events.None,
-							EnterMsg = entermsg,
-							LeaveMsg = leavemsg,
-							Message = msg,
-							MsgInterval = msgitv ?? 0,
-							TempGroup = temp,
-							Itembans = itemb,
-							Projbans = projb,
-							Tilebans = tileb,
-							Permissions = perms
-						};
-
-						if (region.HasEvent(Events.TempGroup) && region.TempGroup == null)
-							TShock.Log.ConsoleError("[RegionTrigger] TempGroup '{0}' of region '{1}' is invalid!", tempgroup, region.Region.Name);
-
-						Regions.Add(region);
+						Regions.Add(RtRegion.FromReader(reader));
 					}
 				}
 			}
