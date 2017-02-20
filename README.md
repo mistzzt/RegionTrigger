@@ -1,56 +1,53 @@
 # RegionTrigger for TShock
 
-RegionTrigger is a **TShock-based** plugin aimed to trigger special events when players enter a region.
+RegionTrigger 是基于**TShock**的插件，用途是设定区域内事件。
 
-> 本插件有中文版本! 查看[中文教程][cn].. [下载链接][cndown]..
+## 安装需要
+- API版本: 2.0
+- TShock版本: 4.3.22
 
-## Requirement:
-- API Version: 2.0
-- TShock Version: 4.3.22
+## 指令教程
+- `/rt set-<属性> <区域名> [--del] <值>` -- *Sets regions*
+>  ### 可用属性 （括号内为简写）
+>  - 事件: `event(e)`
+>  - 封禁: `projban(pb), itemban(ib), tileban(tb)`
+>  - 信息: `entermsg(em), leavemsg(lm), messageinterval(msgitv/mi)`
+>  - 组: `tempgroup(tg)`
 
-## Commands:
-- `/rt set-<property> <region> [--del] <value>` -- *Sets regions*
->  ### Available properties:
->  - Event: `event(e)`
->  - Bans: `projban(pb), itemban(ib), tileban(tb)`
->  - Messages: `entermsg(em), leavemsg(lm), messageinterval(msgitv/mi)`
->  - Group: `tempgroup(tg)`
-
-  **e.g.** `/rt set-event main-region nopvp`
-          ` /rt set-tempgroup main-region admin`
+  **例子** `/rt set-event main-region nopvp` `//给main-region区域加上事件nopvp`
+          ` /rt set-tempgroup main-region admin` `//设定main-region区域的临时组为admin`
   
-- `/rt show <region>` -- *Gets information about a specific region*
-- `/rt reload` -- *Reloads data in database*
-- `/rt --help [page]` -- *Gets helps*
+- `/rt show <区域名>` -- *获取区域的信息*
+- `/rt reload` -- *重新加载数据库数据*
+- `/rt --help [页码]` -- *获取帮助*
 
-You can also find this plugin in [TShock offical forum][tshockco].
+本插件在[TShock官方论坛][tshockco]上有发布。
 
-## Permission
-- `regiontrigger.manage` -- *Manages regions' events.*
-- `regiontrigger.bypass.tileban` -- *Use banned tiles in regions.*
-- `regiontrigger.bypass.projban` -- *Use banned projectiles in regions.*
-- `regiontrigger.bypass.itemban` -- *Use banned items in regions.*
-- `regiontrigger.bypass.tempgroup` -- *Player won't be switched to tempgroup.*
-- `regiontrigger.bypass.pvp` -- *Players will be able to toggle their PvP status.*
-- `regiontrigger.bypass.nopvp` -- *Players will be able to toggle their PvP status.*
-- `regiontrigger.bypass.private` -- *Enters private regions.*
-- `regiontrigger.bypass.tempperm` -- *Skip temp permissions in region.*
+## 权限
+- `regiontrigger.manage` -- *管理区域事件*
+- `regiontrigger.bypass.tileban` -- *区域内使用被禁止的物块*
+- `regiontrigger.bypass.projban` -- *区域内使用被禁止的抛射体*
+- `regiontrigger.bypass.itemban` -- *区域内使用被禁止的物品*
+- `regiontrigger.bypass.tempgroup` -- *跳过区域内换临时组*
+- `regiontrigger.bypass.pvp` -- *跳过区域强制pvp*
+- `regiontrigger.bypass.nopvp` -- *跳过区域禁止pvp*
+- `regiontrigger.bypass.private` -- *可以进入禁止进入的区域*
+- `regiontrigger.bypass.tempperm` -- *跳过区域内临时权限*
 
-## Available events now:
-- `EnterMsg` - *Sends player a specific message when entering regions.*
-- `LeaveMsg` - *Sends player a specific message when leaving regions.*
-- `Message` - *Sends player in regions a specific message.*
-- `TempGroup` - *Alters players' tempgroups when they are in regions.*
-- `Itemban` - *Disallows players in specific regions from using banned items.*
-- `Projban` - *Disallows players in specific regions from using banned projectiles.*
-- `Tileban` - *Disallows players in specific regions from using banned tiles.*
-- `Kill` - *Kills players entering to region.*
-- `Godmode` - *Turns players' godmode on when they are in regions.*
-- `Pvp` - *Turns players' PvP status on when they are in regions.*
-- `NoPvp` - *Disallows players from enabling their PvP mode.*
-- `InvariantPvp` - *Disallows players from changing their pvp mode.*
-- `Private` - *Disallows players without permission from entering region.*
+## 可用事件
+- `EnterMsg` - *进入区域时发送消息*
+- `LeaveMsg` - *离开区域时发送消息*
+- `Message` - *以特定间隔区域内玩家发送消息*
+- `TempGroup` - *应用区域内临时组*
+- `Itemban` - *区域内禁用特定物品*
+- `Projban` - *区域内禁用特定抛射体*
+- `Tileban` - *区域内禁放特定物块*
+- `Kill` - *杀死进入区域的玩家*
+- `Godmode` - *区域内玩家无敌*
+- `Pvp` - *区域内强制PvP*
+- `NoPvp` - *区域内禁止PvP*
+- `InvariantPvp` - *区域内禁止改变PvP状态*
+- `Private` - *禁止进入区域*
+- `TempPermission` - *区域内玩家获得临时权限*
 
    [tshockco]: <https://tshock.co/xf/index.php?resources/regiontrigger.157/>
-   [cn]: <https://github.com/mistzzt/RegionTrigger/blob/adv-cn_master/README.md>
-   [cndown]: <https://github.com/mistzzt/RegionTrigger/releases>
