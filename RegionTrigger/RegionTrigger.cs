@@ -655,7 +655,7 @@ namespace RegionTrigger
 						PaginationTools.SendPage(args.Player, pageNumber, lines,
 							new PaginationTools.Settings
 							{
-								HeaderFormat = "RegionTrigger Sub-Commands Instructions ({0}/{1}):",
+								HeaderFormat = "RegionTrigger Instructions ({0}/{1}):",
 								FooterFormat = "Type {0}rt --help {{0}} for more instructions.".SFormat(Commands.Specifier)
 							}
 						);

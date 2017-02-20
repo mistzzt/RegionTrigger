@@ -8,18 +8,22 @@ namespace RegionTrigger
 {
 	internal static class Events
 	{
-		public static Dictionary<string, string> EventsDescriptions = new Dictionary<string, string>();
+		public static Dictionary<Event, string> EventsDescriptions = new Dictionary<Event, string>();
 
 		static Events()
 		{
-			foreach (var enumName in typeof(Event).GetEnumNames())
+			var values = typeof(Event).GetEnumValues();
+
+			for (var index = 0; index < values.Length; index++)
 			{
+				var val = (Event) values.GetValue(index);
+				var enumName = val.ToString();
 				var fieldInfo = typeof(Event).GetField(enumName);
 
 				var descattr =
 					fieldInfo.GetCustomAttributes(false).FirstOrDefault(o => o is DescriptionAttribute) as DescriptionAttribute;
 				var desc = !string.IsNullOrWhiteSpace(descattr?.Description) ? descattr.Description : "None";
-				EventsDescriptions.Add(fieldInfo.Name, desc);
+				EventsDescriptions.Add(val, desc);
 			}
 		}
 
