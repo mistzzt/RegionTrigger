@@ -197,14 +197,7 @@ namespace RegionTrigger
 
 		private void OnRegionDeleted(RegionHooks.RegionDeletedEventArgs args)
 		{
-			try
-			{
-				RtRegions.DeleteRtRegion(args.Region.Name);
-			}
-			catch (Exception ex)
-			{
-				TShock.Log.Error("[RegionTrigger] {0}", ex.Message);
-			}
+			RtRegions.DeleteRtRegion(args.Region.ID);
 		}
 
 		private static void OnPlayerPermission(PlayerPermissionEventArgs args)
@@ -393,7 +386,7 @@ namespace RegionTrigger
 				return;
 			}
 
-			var cmd = args.Parameters[0].Trim().ToLower();
+			var cmd = args.Parameters[0].Trim().ToLowerInvariant();
 			if (cmd.StartsWith("set-"))
 			{
 				#region set-prop
@@ -423,21 +416,11 @@ namespace RegionTrigger
 				var rt = RtRegions.GetRtRegionByRegionId(region.ID);
 				if (rt == null)
 				{
-					try
-					{
-						RtRegions.AddRtRegion(region.Name, null);
-						rt = RtRegions.GetRtRegionByRegionId(region.ID);
-						if (rt == null)
-							throw new Exception("Database error: cannot create new region!!");
-					}
-					catch (Exception ex)
-					{
-						args.Player.SendErrorMessage(ex.Message);
-						return;
-					}
+					RtRegions.AddRtRegion(region.ID);
+					rt = RtRegions.GetRtRegionByRegionId(region.ID);
 				}
 				// has parameter --del
-				var isDel = args.Parameters[2].ToLower() == "--del";
+				var isDel = string.Equals(args.Parameters[2], "--del", StringComparison.OrdinalIgnoreCase);
 				// sometimes commands with --del don't need <value> e.g. /rt set-tg <region> --del
 				if (isDel && args.Parameters.Count == 3 && !DoNotNeedDelValueProps.Contains(propset))
 				{
@@ -456,9 +439,9 @@ namespace RegionTrigger
 							string invalids;
 							var validatedEvents = Events.ValidateEventWhenAdd(propValue, out invalids);
 							if (!isDel)
-								RtRegions.AddEvents(region.Name, validatedEvents);
+								RtRegions.AddEvents(rt, validatedEvents);
 							else
-								RtRegions.RemoveEvents(region.Name, validatedEvents);
+								RtRegions.RemoveEvents(rt, validatedEvents);
 							args.Player.SendSuccessMessage("Region {0} has been modified successfully!", region.Name);
 							if (!string.IsNullOrWhiteSpace(invalids))
 								args.Player.SendErrorMessage("Invalid events: {0}", invalids);
@@ -469,12 +452,12 @@ namespace RegionTrigger
 							{
 								if (!isDel)
 								{
-									RtRegions.AddProjban(region.Name, id);
+									RtRegions.AddProjban(rt, id);
 									args.Player.SendSuccessMessage("Banned projectile {0} in region {1}.", id, region.Name);
 								}
 								else
 								{
-									RtRegions.RemoveProjban(region.Name, id);
+									RtRegions.RemoveProjban(rt, id);
 									args.Player.SendSuccessMessage("Unbanned projectile {0} in region {1}.", id, region.Name);
 								}
 							}
@@ -495,12 +478,12 @@ namespace RegionTrigger
 							{
 								if (!isDel)
 								{
-									RtRegions.AddItemban(region.Name, items[0].name);
+									RtRegions.AddItemban(rt, items[0].name);
 									args.Player.SendSuccessMessage("Banned {0} in region {1}.", items[0].name, region.Name);
 								}
 								else
 								{
-									RtRegions.RemoveItemban(region.Name, items[0].name);
+									RtRegions.RemoveItemban(rt, items[0].name);
 									args.Player.SendSuccessMessage("Unbanned {0} in region {1}.", items[0].name, region.Name);
 								}
 							}
@@ -511,12 +494,12 @@ namespace RegionTrigger
 							{
 								if (!isDel)
 								{
-									RtRegions.AddTileban(region.Name, tileid);
+									RtRegions.AddTileban(rt, tileid);
 									args.Player.SendSuccessMessage("Banned tile {0} in region {1}.", tileid, region.Name);
 								}
 								else
 								{
-									RtRegions.RemoveTileban(region.Name, tileid);
+									RtRegions.RemoveTileban(rt, tileid);
 									args.Player.SendSuccessMessage("Unbanned tile {0} in region {1}.", tileid, region.Name);
 								}
 							}
@@ -524,7 +507,7 @@ namespace RegionTrigger
 								args.Player.SendErrorMessage("Invalid tile ID!");
 							break;
 						case "em":
-							RtRegions.SetEnterMessage(region.Name, !isDel ? propValue : null);
+							RtRegions.SetEnterMessage(rt, !isDel ? propValue : null);
 							if (!isDel)
 							{
 								args.Player.SendSuccessMessage("Set enter message of region {0} to '{1}'", region.Name, propValue);
@@ -535,7 +518,7 @@ namespace RegionTrigger
 								args.Player.SendSuccessMessage("Removed enter message of region {0}.", region.Name);
 							break;
 						case "lm":
-							RtRegions.SetLeaveMessage(region.Name, !isDel ? propValue : null);
+							RtRegions.SetLeaveMessage(rt, !isDel ? propValue : null);
 							if (!isDel)
 							{
 								args.Player.SendSuccessMessage("Set leave message of region {0} to '{1}'", region.Name, propValue);
@@ -546,7 +529,7 @@ namespace RegionTrigger
 								args.Player.SendSuccessMessage("Removed leave message of region {0}.", region.Name);
 							break;
 						case "msg":
-							RtRegions.SetMessage(region.Name, !isDel ? propValue : null);
+							RtRegions.SetMessage(rt, !isDel ? propValue : null);
 							if (!isDel)
 							{
 								args.Player.SendSuccessMessage("Set message of region {0} to '{1}'", region.Name, propValue);
@@ -562,7 +545,7 @@ namespace RegionTrigger
 							int itv;
 							if (!int.TryParse(propValue, out itv) || itv < 0)
 								throw new Exception("Invalid interval. (Interval must be integer >= 0)");
-							RtRegions.SetMsgInterval(region.Name, itv);
+							RtRegions.SetMsgInterval(rt, itv);
 							args.Player.SendSuccessMessage("Set message interval of region {0} to {1}.", region.Name, itv);
 							if (!rt.HasEvent(Event.Message))
 								args.Player.SendWarningMessage("Add event MESSAGE if you want to make it work.");
@@ -570,27 +553,28 @@ namespace RegionTrigger
 						case "tg":
 							if (!isDel && propValue != "null")
 							{
-								RtRegions.SetTempGroup(region.Name, propValue);
+								RtRegions.SetTempGroup(rt, propValue);
 								args.Player.SendSuccessMessage("Set tempgroup of region {0} to {1}.", region.Name, propValue);
 								if (!rt.HasEvent(Event.TempGroup))
 									args.Player.SendWarningMessage("Add event TEMPGROUP if you want to make it work.");
 							}
 							else
 							{
-								RtRegions.SetTempGroup(region.Name, null);
+								RtRegions.SetTempGroup(rt, null);
 								args.Player.SendSuccessMessage("Removed tempgroup of region {0}.", region.Name);
 							}
 							break;
 						case "tp":
+							// ReSharper disable once PossibleNullReferenceException
 							var permissions = propValue.ToLower().Split(',').Where(s => !string.IsNullOrWhiteSpace(s)).ToList();
 							if (!isDel)
 							{
-								RtRegions.AddPermissions(region.Name, permissions);
+								RtRegions.AddPermissions(rt, permissions);
 								args.Player.SendSuccessMessage("Region {0} has been modified successfully.", region.Name);
 							}
 							else
 							{
-								RtRegions.DeletePermissions(region.Name, permissions);
+								RtRegions.DeletePermissions(rt, permissions);
 								args.Player.SendSuccessMessage("Region {0} has been modified successfully.", region.Name);
 							}
 							break;
