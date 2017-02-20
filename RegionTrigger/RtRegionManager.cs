@@ -77,10 +77,7 @@ namespace RegionTrigger
 			if (region == null)
 				throw new Exception($"Couldn't find region named '{regionName}'!");
 
-			var rt = new RtRegion(-1, region.ID)
-			{
-				Events = Events.ValidateEvents(events).Item1 ?? Events.None
-			};
+			var rt = new RtRegion(-1, region.ID, Events.ParseEvents(events));
 
 			var query = "INSERT INTO RtRegions (RegionId, Events) VALUES (@0, @1);";
 			try
@@ -124,50 +121,26 @@ namespace RegionTrigger
 			}
 		}
 
-		public void AddEvents(string regionName, string events)
+		public void AddEvents(string regionName, Event ev)
 		{
 			var rt = GetRtRegionByName(regionName);
 			if (rt == null)
 				throw new Exception("Invalid region!");
 
-			if (string.IsNullOrWhiteSpace(events) || events.ToLower() == Events.None)
-				throw new ArgumentException("Invalid events!");
+			rt.AddEvent(ev);
 
-			var modified = new StringBuilder(rt.Events == Events.None ? "" : rt.Events);
-			var toAdd = Events.ValidateEventsList(events).Item1;
-			toAdd.ForEach(r =>
-			{
-				if (!rt.HasEvent(r))
-					modified.Append($",{r}");
-			});
-			if (modified[0] == ',')
-				modified.Remove(0, 1);
-
-			if (_database.Query("UPDATE RtRegions SET Events = @0 WHERE Id = @1", modified, rt.Id) == 0)
-				throw new Exception("Database error: No affected rows.");
-			rt.Events = modified.ToString();
+			_database.Query("UPDATE RtRegions SET Events = @0 WHERE Id = @1", rt.Events, rt.Id);
 		}
 
-		public void RemoveEvents(string regionName, string events)
+		public void RemoveEvents(string regionName, Event ev)
 		{
 			var rt = GetRtRegionByName(regionName);
 			if (rt == null)
 				throw new Exception("Invalid region!");
 
-			if (string.IsNullOrWhiteSpace(events) || events.ToLower() == Events.None)
-				throw new ArgumentException("Invalid events!");
+			rt.RemoveEvent(ev);
 
-			var originEvents = rt.Events;
-			var toRemove = Events.ValidateEventsList(events).Item1;
-			toRemove.ForEach(r =>
-			{
-				rt.RemoveEvent(r);
-			});
-
-			if (_database.Query("UPDATE RtRegions SET Events = @0 WHERE Id = @1", rt.Events, rt.Id) != 0)
-				return;
-			rt.Events = originEvents;
-			throw new Exception("Database error: No affected rows.");
+			_database.Query("UPDATE RtRegions SET Events = @0 WHERE Id = @1", rt.Events, rt.Id);
 		}
 
 		public void SetTempGroup(string regionName, string tempGroup)

@@ -115,7 +115,7 @@ namespace RegionTrigger
 
 			var rt = RtRegions.GetTopRegion(RtRegions.Regions.Where(r => r.Region.InArea(args.X, args.Y)));
 
-			if (rt?.HasEvent(Events.Tileban) != true)
+			if (rt?.HasEvent(Event.Tileban) != true)
 				return;
 
 			if (rt.TileIsBanned(args.EditData) && !args.Player.HasPermission("regiontrigger.bypass.tileban"))
@@ -144,7 +144,7 @@ namespace RegionTrigger
 
 				var rt = RtRegions.GetTopRegion(RtRegions.Regions.Where(r => r.Region.InArea((int)(pos.X / 16), (int)(pos.Y / 16))));
 
-				if (rt?.HasEvent(Events.NoItem) != true)
+				if (rt?.HasEvent(Event.NoItem) != true)
 					return;
 
 				var player = TShock.Players[args.Msg.whoAmI];
@@ -162,7 +162,7 @@ namespace RegionTrigger
 			var ply = TShock.Players[args.Owner];
 			var rt = RtPlayer.GetPlayerInfo(ply).CurrentRegion;
 
-			if (rt?.HasEvent(Events.Projban) != true)
+			if (rt?.HasEvent(Event.Projban) != true)
 				return;
 
 			if (rt.ProjectileIsBanned(args.Type) && !ply.HasPermission("regiontrigger.bypass.projban"))
@@ -178,7 +178,7 @@ namespace RegionTrigger
 			var ply = TShock.Players[args.PlayerId];
 			var rt = RtPlayer.GetPlayerInfo(ply).CurrentRegion;
 
-			if (rt?.HasEvent(Events.Itemban) != true)
+			if (rt?.HasEvent(Event.Itemban) != true)
 				return;
 
 			BitsByte control = args.Control;
@@ -211,7 +211,7 @@ namespace RegionTrigger
 		{
 			var rt = RtPlayer.GetPlayerInfo(args.Player).CurrentRegion;
 
-			if (rt?.HasEvent(Events.TempPermission) != true)
+			if (rt?.HasEvent(Event.TempPermission) != true)
 				return;
 
 			if (rt.HasPermission(args.Permission) && !args.Player.HasPermission("regiontrigger.bypass.tempperm"))
@@ -220,7 +220,7 @@ namespace RegionTrigger
 
 		private static void OnRegionLeft(TSPlayer player, RtRegion region, RtPlayer data)
 		{
-			if (region.HasEvent(Events.LeaveMsg))
+			if (region.HasEvent(Event.LeaveMsg))
 			{
 				if (string.IsNullOrWhiteSpace(region.LeaveMsg))
 					player.SendInfoMessage("You have left region {0}", region.Region.Name);
@@ -228,19 +228,19 @@ namespace RegionTrigger
 					player.SendMessage(region.LeaveMsg, Color.White);
 			}
 
-			if (region.HasEvent(Events.TempGroup) && player.tempGroup == region.TempGroup)
+			if (region.HasEvent(Event.TempGroup) && player.tempGroup == region.TempGroup)
 			{
 				player.tempGroup = null;
 				player.SendInfoMessage("You are no longer in group {0}.", region.TempGroup.Name);
 			}
 
-			if (region.HasEvent(Events.Godmode))
+			if (region.HasEvent(Event.Godmode))
 			{
 				player.GodMode = false;
 				player.SendInfoMessage("You are no longer in godmode!");
 			}
 
-			if (region.HasEvent(Events.Pvp) || region.HasEvent(Events.NoPvp) || region.HasEvent(Events.InvariantPvp))
+			if (region.HasEvent(Event.Pvp) || region.HasEvent(Event.NoPvp) || region.HasEvent(Event.InvariantPvp))
 			{
 				data.ForcePvP = null;
 				data.CanTogglePvP = true;
@@ -252,7 +252,7 @@ namespace RegionTrigger
 		{
 			var rt = data.CurrentRegion;
 
-			if (rt.HasEvent(Events.EnterMsg))
+			if (rt.HasEvent(Event.EnterMsg))
 			{
 				if (string.IsNullOrWhiteSpace(rt.EnterMsg))
 					player.SendInfoMessage("You have entered region {0}", rt.Region.Name);
@@ -260,12 +260,12 @@ namespace RegionTrigger
 					player.SendMessage(rt.EnterMsg, Color.White);
 			}
 
-			if (rt.HasEvent(Events.Message) && !string.IsNullOrWhiteSpace(rt.Message))
+			if (rt.HasEvent(Event.Message) && !string.IsNullOrWhiteSpace(rt.Message))
 			{
 				player.SendInfoMessage(rt.Message);
 			}
 
-			if (rt.HasEvent(Events.TempGroup) && rt.TempGroup != null && !player.HasPermission("regiontrigger.bypass.tempgroup"))
+			if (rt.HasEvent(Event.TempGroup) && rt.TempGroup != null && !player.HasPermission("regiontrigger.bypass.tempgroup"))
 			{
 				if (rt.TempGroup == null)
 					TShock.Log.ConsoleError("TempGroup in region '{0}' is not valid!", rt.Region.Name);
@@ -276,19 +276,19 @@ namespace RegionTrigger
 				}
 			}
 
-			if (rt.HasEvent(Events.Kill) && !player.HasPermission("regiontrigger.bypass.kill"))
+			if (rt.HasEvent(Event.Kill) && !player.HasPermission("regiontrigger.bypass.kill"))
 			{
 				player.KillPlayer();
 				player.SendInfoMessage("You were killed!");
 			}
 
-			if (rt.HasEvent(Events.Godmode))
+			if (rt.HasEvent(Event.Godmode))
 			{
 				player.GodMode = true;
 				player.SendInfoMessage("You are now in godmode!");
 			}
 
-			if (rt.HasEvent(Events.Pvp) && !player.HasPermission("regiontrigger.bypass.pvp"))
+			if (rt.HasEvent(Event.Pvp) && !player.HasPermission("regiontrigger.bypass.pvp"))
 			{
 				data.ForcePvP = true;
 				if (!player.TPlayer.hostile)
@@ -300,7 +300,7 @@ namespace RegionTrigger
 				}
 			}
 
-			if (rt.HasEvent(Events.NoPvp) && !player.HasPermission("regiontrigger.bypass.nopvp"))
+			if (rt.HasEvent(Event.NoPvp) && !player.HasPermission("regiontrigger.bypass.nopvp"))
 			{
 				data.ForcePvP = false;
 				if (player.TPlayer.hostile)
@@ -312,12 +312,12 @@ namespace RegionTrigger
 				}
 			}
 
-			if (rt.HasEvent(Events.InvariantPvp) && !player.HasPermission("regiontrigger.bypass.inpvp"))
+			if (rt.HasEvent(Event.InvariantPvp) && !player.HasPermission("regiontrigger.bypass.inpvp"))
 			{
 				data.CanTogglePvP = false;
 			}
 
-			if (rt.HasEvent(Events.Private) && !player.HasPermission("regiontrigger.bypass.private"))
+			if (rt.HasEvent(Event.Private) && !player.HasPermission("regiontrigger.bypass.private"))
 			{
 				player.Spawn();
 				player.SendErrorMessage("You don't have permission to enter that region.");
@@ -348,7 +348,7 @@ namespace RegionTrigger
 				if (dt.CurrentRegion == null)
 					continue;
 
-				if (dt.CurrentRegion.HasEvent(Events.Message) && !string.IsNullOrWhiteSpace(dt.CurrentRegion.Message) && dt.CurrentRegion.MsgInterval != 0)
+				if (dt.CurrentRegion.HasEvent(Event.Message) && !string.IsNullOrWhiteSpace(dt.CurrentRegion.Message) && dt.CurrentRegion.MsgInterval != 0)
 				{
 					if (dt.MsgCd < dt.CurrentRegion.MsgInterval)
 					{
@@ -453,17 +453,15 @@ namespace RegionTrigger
 					switch (propset)
 					{
 						case "e":
-							var validatedEvents = Events.ValidateEvents(propValue);
-							if (validatedEvents.Item1 != null)
-							{
-								if (!isDel)
-									RtRegions.AddEvents(region.Name, validatedEvents.Item1);
-								else
-									RtRegions.RemoveEvents(region.Name, validatedEvents.Item1);
-								args.Player.SendSuccessMessage("Region {0} has been modified successfully!", region.Name);
-							}
-							if (validatedEvents.Item2 != null)
-								args.Player.SendErrorMessage("Invalid events: {0}", validatedEvents.Item2);
+							string invalids;
+							var validatedEvents = Events.ValidateEventWhenAdd(propValue, out invalids);
+							if (!isDel)
+								RtRegions.AddEvents(region.Name, validatedEvents);
+							else
+								RtRegions.RemoveEvents(region.Name, validatedEvents);
+							args.Player.SendSuccessMessage("Region {0} has been modified successfully!", region.Name);
+							if (!string.IsNullOrWhiteSpace(invalids))
+								args.Player.SendErrorMessage("Invalid events: {0}", invalids);
 							break;
 						case "pb":
 							short id;
@@ -530,7 +528,7 @@ namespace RegionTrigger
 							if (!isDel)
 							{
 								args.Player.SendSuccessMessage("Set enter message of region {0} to '{1}'", region.Name, propValue);
-								if (!rt.HasEvent(Events.EnterMsg))
+								if (!rt.HasEvent(Event.EnterMsg))
 									args.Player.SendWarningMessage("Add event ENTERMESSAGE if you want to make it work.");
 							}
 							else
@@ -541,7 +539,7 @@ namespace RegionTrigger
 							if (!isDel)
 							{
 								args.Player.SendSuccessMessage("Set leave message of region {0} to '{1}'", region.Name, propValue);
-								if (!rt.HasEvent(Events.LeaveMsg))
+								if (!rt.HasEvent(Event.LeaveMsg))
 									args.Player.SendWarningMessage("Add event LEAVEMESSAGE if you want to make it work.");
 							}
 							else
@@ -552,7 +550,7 @@ namespace RegionTrigger
 							if (!isDel)
 							{
 								args.Player.SendSuccessMessage("Set message of region {0} to '{1}'", region.Name, propValue);
-								if (!rt.HasEvent(Events.Message))
+								if (!rt.HasEvent(Event.Message))
 									args.Player.SendWarningMessage("Add event MESSAGE if you want to make it work.");
 							}
 							else
@@ -566,7 +564,7 @@ namespace RegionTrigger
 								throw new Exception("Invalid interval. (Interval must be integer >= 0)");
 							RtRegions.SetMsgInterval(region.Name, itv);
 							args.Player.SendSuccessMessage("Set message interval of region {0} to {1}.", region.Name, itv);
-							if (!rt.HasEvent(Events.Message))
+							if (!rt.HasEvent(Event.Message))
 								args.Player.SendWarningMessage("Add event MESSAGE if you want to make it work.");
 							break;
 						case "tg":
@@ -574,7 +572,7 @@ namespace RegionTrigger
 							{
 								RtRegions.SetTempGroup(region.Name, propValue);
 								args.Player.SendSuccessMessage("Set tempgroup of region {0} to {1}.", region.Name, propValue);
-								if (!rt.HasEvent(Events.TempGroup))
+								if (!rt.HasEvent(Event.TempGroup))
 									args.Player.SendWarningMessage("Add event TEMPGROUP if you want to make it work.");
 							}
 							else

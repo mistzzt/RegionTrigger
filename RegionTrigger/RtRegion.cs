@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Extensions;
 using Terraria;
 using TShockAPI;
 using TShockAPI.DB;
@@ -23,26 +24,9 @@ namespace RegionTrigger
 
 		public readonly Region Region;
 
-		private readonly List<string> _events = new List<string>();
+		private Event _event = Event.None;
 
-		public string Events
-		{
-			get
-			{
-				return _events.Count == 0
-					? global::RegionTrigger.Events.None
-					: string.Join(",", _events);
-			}
-			set
-			{
-				if (string.IsNullOrWhiteSpace(value))
-					return;
-				_events.Clear();
-				var events = value.Split(',');
-				foreach (var @event in events.Where(e => !string.IsNullOrWhiteSpace(e)))
-					_events.Add(@event.Trim());
-			}
-		}
+		public string Events => _event.ToString("F");
 
 		private readonly List<string> _itembans = new List<string>();
 
@@ -129,11 +113,25 @@ namespace RegionTrigger
 				throw new Exception("Invalid region Id!");
 		}
 
-		public bool HasEvent(string @event)
-			=> _events.Contains(@event);
+		public RtRegion(int id, int rid, Event ev) : this(id, rid)
+		{
+			_event = ev;
+		}
 
-		public bool RemoveEvent(string @event)
-			=> _events.Remove(@event);
+		public bool HasEvent(Event ev)
+		{
+			return _event.Has(ev);
+		}
+
+		public void AddEvent(Event ev)
+		{
+			_event = _event.Include(ev);
+		}
+
+		public void RemoveEvent(Event ev)
+		{
+			_event = _event.Remove(ev);
+		}
 
 		public bool TileIsBanned(short tileId)
 			=> _tilebans.Contains(tileId);
@@ -185,7 +183,7 @@ namespace RegionTrigger
 
 			var region = new RtRegion(reader.Get<int>("Id"), reader.Get<int>("RegionId"))
 			{
-				Events = reader.Get<string>("Events") ?? global::RegionTrigger.Events.None,
+				_event = global::RegionTrigger.Events.ParseEvents(reader.Get<string>("Events")),
 				EnterMsg = reader.Get<string>("EnterMsg"),
 				LeaveMsg = reader.Get<string>("LeaveMsg"),
 				Message = reader.Get<string>("Message"),
@@ -197,7 +195,7 @@ namespace RegionTrigger
 				Permissions = reader.Get<string>("Permissions")
 			};
 
-			if (region.TempGroup == null && region.HasEvent(global::RegionTrigger.Events.TempGroup))
+			if (region.TempGroup == null && region.HasEvent(Event.TempGroup))
 				TShock.Log.ConsoleError("[RegionTrigger] TempGroup '{0}' of region '{1}' is invalid!", groupName, region.Region.Name);
 
 			return region;
