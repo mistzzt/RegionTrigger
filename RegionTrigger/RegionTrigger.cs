@@ -25,7 +25,7 @@ namespace RegionTrigger
 
 		public override Version Version => Assembly.GetExecutingAssembly().GetName().Version;
 
-		public override string Description => "Perform actions in regions where players are active.";
+		public override string Description => "区域内执行特定事件";
 
 		public RegionTrigger(Main game) : base(game) { }
 
@@ -67,7 +67,7 @@ namespace RegionTrigger
 
 		private void OnInitialize(EventArgs args)
 		{
-			Commands.ChatCommands.Add(new Command("regiontrigger.manage", RegionSetProperties, "rt"));
+			Commands.ChatCommands.Add(new Command("regiontrigger.manage", RegionSetProperties, "rt", "区域事件"));
 
 			RtRegions = new RtRegionManager(TShock.DB);
 		}
@@ -102,7 +102,7 @@ namespace RegionTrigger
 				(dt.ForcePvP == false && args.Pvp) ||
 				!dt.CanTogglePvP)
 			{
-				ply.SendErrorMessage("You can't change your PvP status in this region!");
+				ply.SendErrorMessage("你在此区域内无法改变PvP状态!");
 				ply.SendData(PacketTypes.TogglePvp, "", args.PlayerId);
 				args.Handled = true;
 			}
@@ -121,7 +121,7 @@ namespace RegionTrigger
 			if (rt.TileIsBanned(args.EditData) && !args.Player.HasPermission("regiontrigger.bypass.tileban"))
 			{
 				args.Player.SendTileSquare(args.X, args.Y, 1);
-				args.Player.SendErrorMessage("You do not have permission to place this tile.");
+				args.Player.SendErrorMessage("你在此区域内无法放置该物块!");
 				args.Handled = true;
 			}
 		}
@@ -151,8 +151,8 @@ namespace RegionTrigger
 				if (player == null || player.HasPermission("regiontrigger.bypass.itemdrop"))
 					return;
 
-				player.SendErrorMessage("你不能在当前区域丢东西!");
-				player.Disable("非法丢东西");
+				player.SendErrorMessage("你在此区域内无法丢弃东西!");
+				player.Disable("非法丢弃东西");
 				args.Handled = true;
 			}
 		}
@@ -167,8 +167,8 @@ namespace RegionTrigger
 
 			if (rt.ProjectileIsBanned(args.Type) && !ply.HasPermission("regiontrigger.bypass.projban"))
 			{
-				ply.Disable($"Create banned projectile in region {rt.Region.Name}.", DisableFlags.WriteToLogAndConsole);
-				ply.SendErrorMessage("This projectile is banned here.");
+				ply.Disable("非法用抛射体", DisableFlags.WriteToLogAndConsole);
+				ply.SendErrorMessage("你在此区域内无法发射该抛射体!");
 				ply.RemoveProjectile(args.Index, args.Owner);
 			}
 		}
@@ -189,8 +189,8 @@ namespace RegionTrigger
 				{
 					control[5] = false;
 					args.Control = control;
-					ply.Disable($"using a banned item ({itemName})", DisableFlags.WriteToLogAndConsole);
-					ply.SendErrorMessage($"You can't use {itemName} here.");
+					ply.Disable($"使用封禁物品 ({itemName})", DisableFlags.WriteToLogAndConsole);
+					ply.SendErrorMessage($"你不能在这里用{itemName} 。");
 				}
 			}
 		}
@@ -216,7 +216,7 @@ namespace RegionTrigger
 			if (region.HasEvent(Event.LeaveMsg))
 			{
 				if (string.IsNullOrWhiteSpace(region.LeaveMsg))
-					player.SendInfoMessage("You have left region {0}", region.Region.Name);
+					player.SendInfoMessage("你离开了区域{0}。", region.Region.Name);
 				else
 					player.SendMessage(region.LeaveMsg, Color.White);
 			}
@@ -224,20 +224,20 @@ namespace RegionTrigger
 			if (region.HasEvent(Event.TempGroup) && player.tempGroup == region.TempGroup)
 			{
 				player.tempGroup = null;
-				player.SendInfoMessage("You are no longer in group {0}.", region.TempGroup.Name);
+				player.SendInfoMessage("区域内临时组{0}已经失效。", region.TempGroup.Name);
 			}
 
 			if (region.HasEvent(Event.Godmode))
 			{
 				player.GodMode = false;
-				player.SendInfoMessage("You are no longer in godmode!");
+				player.SendInfoMessage("区域内的无敌模式失效。");
 			}
 
 			if (region.HasEvent(Event.Pvp) || region.HasEvent(Event.NoPvp) || region.HasEvent(Event.InvariantPvp))
 			{
 				data.ForcePvP = null;
 				data.CanTogglePvP = true;
-				player.SendInfoMessage("You can toggle your PvP status now.");
+				player.SendInfoMessage("现在你可以切换PvP模式了。");
 			}
 		}
 
@@ -248,7 +248,7 @@ namespace RegionTrigger
 			if (rt.HasEvent(Event.EnterMsg))
 			{
 				if (string.IsNullOrWhiteSpace(rt.EnterMsg))
-					player.SendInfoMessage("You have entered region {0}", rt.Region.Name);
+					player.SendInfoMessage("你进入了区域{0}。", rt.Region.Name);
 				else
 					player.SendMessage(rt.EnterMsg, Color.White);
 			}
@@ -261,24 +261,24 @@ namespace RegionTrigger
 			if (rt.HasEvent(Event.TempGroup) && rt.TempGroup != null && !player.HasPermission("regiontrigger.bypass.tempgroup"))
 			{
 				if (rt.TempGroup == null)
-					TShock.Log.ConsoleError("TempGroup in region '{0}' is not valid!", rt.Region.Name);
+					TShock.Log.ConsoleError("区域{0}的临时组无效！", rt.Region.Name);
 				else
 				{
 					player.tempGroup = rt.TempGroup;
-					player.SendInfoMessage("Your group has been changed to {0} in this region.", rt.TempGroup.Name);
+					player.SendInfoMessage("区域内用户组已切换为{0}。", rt.TempGroup.Name);
 				}
 			}
 
 			if (rt.HasEvent(Event.Kill) && !player.HasPermission("regiontrigger.bypass.kill"))
 			{
 				player.KillPlayer();
-				player.SendInfoMessage("You were killed!");
+				player.SendInfoMessage("你踏入了不该踏入之地…");
 			}
 
 			if (rt.HasEvent(Event.Godmode))
 			{
 				player.GodMode = true;
-				player.SendInfoMessage("You are now in godmode!");
+				player.SendInfoMessage("你在区域内会受到服务器的庇护。");
 			}
 
 			if (rt.HasEvent(Event.Pvp) && !player.HasPermission("regiontrigger.bypass.pvp"))
@@ -289,7 +289,7 @@ namespace RegionTrigger
 					player.TPlayer.hostile = true;
 					player.SendData(PacketTypes.TogglePvp, "", player.Index);
 					TSPlayer.All.SendData(PacketTypes.TogglePvp, "", player.Index);
-					player.SendInfoMessage("Your PvP status is forced enabled in this region!");
+					player.SendInfoMessage("区域内强制开启PvP模式。");
 				}
 			}
 
@@ -301,7 +301,7 @@ namespace RegionTrigger
 					player.TPlayer.hostile = false;
 					player.SendData(PacketTypes.TogglePvp, "", player.Index);
 					TSPlayer.All.SendData(PacketTypes.TogglePvp, "", player.Index);
-					player.SendInfoMessage("You can't enable PvP in this region!");
+					player.SendInfoMessage("区域内禁止PvP模式。");
 				}
 			}
 
@@ -313,7 +313,7 @@ namespace RegionTrigger
 			if (rt.HasEvent(Event.Private) && !player.HasPermission("regiontrigger.bypass.private"))
 			{
 				player.Spawn();
-				player.SendErrorMessage("You don't have permission to enter that region.");
+				player.SendErrorMessage("你踏入了不该踏入之地。");
 			}
 		}
 
@@ -365,16 +365,16 @@ namespace RegionTrigger
 		};
 
 		private static readonly string[][] PropStrings = {
-			new[] {"e", "event"},
-			new[] {"pb", "proj", "projban"},
-			new[] {"ib", "item", "itemban"},
-			new[] {"tb", "tile", "tileban"},
-			new[] {"em", "entermsg"},
-			new[] {"lm", "leavemsg"},
-			new[] {"msg", "message"},
-			new[] {"mi", "msgitv", "msginterval", "messageinterval"},
-			new[] {"tg", "tempgroup"},
-			new[] {"tp", "perm", "tempperm", "temppermission"}
+			new[] {"e", "event", "事件"},
+			new[] {"pb", "proj", "projban", "禁proj"},
+			new[] {"ib", "item", "itemban", "禁物品"},
+			new[] {"tb", "tile", "tileban", "禁物块"},
+			new[] {"em", "entermsg", "进入消息"},
+			new[] {"lm", "leavemsg", "离去消息"},
+			new[] {"msg", "message", "消息"},
+			new[] {"mi", "msgitv", "msginterval", "messageinterval", "消息间隔"},
+			new[] {"tg", "tempgroup", "组"},
+			new[] {"tp", "perm", "tempperm", "temppermission", "权限"}
 		};
 
 		[SuppressMessage("ReSharper", "SwitchStatementMissingSomeCases")]
@@ -382,7 +382,7 @@ namespace RegionTrigger
 		{
 			if (args.Parameters.Count == 0)
 			{
-				args.Player.SendErrorMessage("Invalid syntax! Type /rt --help to get instructions.");
+				args.Player.SendErrorMessage("语法无效！键入 /rt --help 获取使用说明。");
 				return;
 			}
 
@@ -392,14 +392,14 @@ namespace RegionTrigger
 				#region set-prop
 				if (args.Parameters.Count < 3)
 				{
-					args.Player.SendErrorMessage("Invalid syntax! Proper syntax: /rt set-<prop> <region> [--del] <value>");
+					args.Player.SendErrorMessage("语法无效！正确语法： /rt set-<属性> <区域名> [--del] <值>");
 					return;
 				}
 				var propset = cmd.Substring(4);
 				// check the property
 				if (!PropStrings.Any(strarray => strarray.Contains(propset)))
 				{
-					args.Player.SendErrorMessage("Invalid property!");
+					args.Player.SendErrorMessage("设置属性无效！");
 					return;
 				}
 				// get the shortest representation of property.
@@ -409,7 +409,7 @@ namespace RegionTrigger
 				var region = TShock.Regions.GetRegionByName(args.Parameters[1]);
 				if (region == null)
 				{
-					args.Player.SendErrorMessage("Invalid region!");
+					args.Player.SendErrorMessage("区域名无效！");
 					return;
 				}
 				// if region hasn't been added into database
@@ -424,7 +424,7 @@ namespace RegionTrigger
 				// sometimes commands with --del don't need <value> e.g. /rt set-tg <region> --del
 				if (isDel && args.Parameters.Count == 3 && !DoNotNeedDelValueProps.Contains(propset))
 				{
-					args.Player.SendErrorMessage($"Invalid syntax! Proper syntax: /rt set-{propset} <region> [--del] <value>");
+					args.Player.SendErrorMessage($"语法无效！正确语法： /rt set-{propset} <区域名> [--del] <值>");
 					return;
 				}
 				var propValue = isDel && args.Parameters.Count == 3 ? null : isDel
@@ -442,9 +442,9 @@ namespace RegionTrigger
 								RtRegions.AddEvents(rt, validatedEvents);
 							else
 								RtRegions.RemoveEvents(rt, validatedEvents);
-							args.Player.SendSuccessMessage("Region {0} has been modified successfully!", region.Name);
+							args.Player.SendSuccessMessage("区域{0}的事件设定完毕！", region.Name);
 							if (!string.IsNullOrWhiteSpace(invalids))
-								args.Player.SendErrorMessage("Invalid events: {0}", invalids);
+								args.Player.SendErrorMessage("无效事件名：{0}", invalids);
 							break;
 						case "pb":
 							short id;
@@ -594,33 +594,33 @@ namespace RegionTrigger
 						{
 							if (args.Parameters.Count != 2)
 							{
-								args.Player.SendErrorMessage("Invalid syntax! Usage: /rt show <region>");
+								args.Player.SendErrorMessage("语法无效！正确语法： /rt show <区域名>");
 								return;
 							}
 
 							var region = TShock.Regions.GetRegionByName(args.Parameters[1]);
 							if (region == null)
 							{
-								args.Player.SendErrorMessage("Invalid region!");
+								args.Player.SendErrorMessage("区域名无效！");
 								return;
 							}
 							var rt = RtRegions.GetRtRegionByRegionId(region.ID);
 							if (rt == null)
 							{
-								args.Player.SendInfoMessage("{0} has not been set up yet. Use: /rt set-<prop> <name> <value>", region.Name);
+								args.Player.SendInfoMessage("区域{0}还未被设置事件。使用 /rt set-<属性> <区域名> <值> 来设置区域后再查看。", region.Name);
 								return;
 							}
 
 							var infos = new List<string> {
-								$"*** Information of region {rt.Region.Name} ***",
-								$" * Events: {rt.CnEvents}",
-								$" * TempGroup: {rt.TempGroup?.Name ?? "None"}",
-								$" * Message & Interval: {rt.Message ?? "None"}({rt.MsgInterval}s)",
-								$" * EnterMessage: {rt.EnterMsg ?? "None"}",
-								$" * LeaveMessage: {rt.LeaveMsg ?? "None"}",
-								$" * Itembans: {(string.IsNullOrWhiteSpace(rt.Itembans) ? "None" : rt.Itembans)}",
-								$" * Projbans: {(string.IsNullOrWhiteSpace(rt.Projbans) ? "None" : rt.Projbans)}",
-								$" * Tilebans: {(string.IsNullOrWhiteSpace(rt.Tilebans) ? "None" : rt.Tilebans)}"
+								$"*** 区域{rt.Region.Name}事件状态 ***",
+								$" *     事件: {rt.CnEvents}",
+								$" *   临时组: {rt.TempGroup?.Name ?? "无"}",
+								$" * 消息发送: {rt.Message ?? "无"} ({rt.MsgInterval}秒)",
+								$" * 进入消息: {rt.EnterMsg ?? "无"}",
+								$" * 离去消息: {rt.LeaveMsg ?? "无"}",
+								$" * 物品封禁: {(string.IsNullOrWhiteSpace(rt.Itembans) ? "无" : rt.Itembans)}",
+								$" * 禁抛射体: {(string.IsNullOrWhiteSpace(rt.Projbans) ? "无" : rt.Projbans)}",
+								$" * 物块封禁: {(string.IsNullOrWhiteSpace(rt.Tilebans) ? "无" : rt.Tilebans)}"
 							};
 							infos.ForEach(args.Player.SendInfoMessage);
 						}
@@ -628,7 +628,7 @@ namespace RegionTrigger
 						break;
 					case "reload":
 						RtRegions.Reload();
-						args.Player.SendSuccessMessage("Reloaded regions from database successfully.");
+						args.Player.SendSuccessMessage("重新加载了事件区域数据。");
 						break;
 					case "--help":
 						#region Help
@@ -638,31 +638,31 @@ namespace RegionTrigger
 
 						var lines = new List<string>
 						{
-							"*** Usage: /rt set-<prop> <region> [--del] <value>",
-							"           /rt show <region>",
+							"*** 用法： /rt set-<属性> <区域名> [--del] <值>",
+							"           /rt show <区域名>",
 							"           /rt reload",
-							"           /rt --help [page]",
-							"*** Avaliable properties:"
+							"           /rt --help [页码]",
+							"*** 可以设置的属性:"
 						};
 						lines.AddRange(PaginationTools.BuildLinesFromTerms(PropStrings, array =>
 						{
 							var strarray = (string[])array;
 							return $"{strarray[0]}({string.Join("/", strarray.Skip(1))})";
 						}, ",", 75).Select(s => s.Insert(0, "   * ")));
-						lines.Add("*** Available events:");
+						lines.Add("*** 可用事件:");
 						lines.AddRange(Events.EventsDescriptions.Select(pair => $"   * {Events.InternalToCnName(pair.Key)} - {pair.Value}"));
 
 						PaginationTools.SendPage(args.Player, pageNumber, lines,
 							new PaginationTools.Settings
 							{
-								HeaderFormat = "RegionTrigger Instructions ({0}/{1}):",
-								FooterFormat = "Type {0}rt --help {{0}} for more instructions.".SFormat(Commands.Specifier)
+								HeaderFormat = "区域事件帮助 ({0}/{1}):",
+								FooterFormat = "键入 {0}rt --help {{0}} 以获取更多帮助。".SFormat(Commands.Specifier)
 							}
 						);
 						#endregion
 						break;
 					default:
-						args.Player.SendErrorMessage("Invalid syntax! Type /rt --help for instructions.");
+						args.Player.SendErrorMessage("语法无效！键入 /rt --help 获取使用说明。");
 						return;
 				}
 		}
