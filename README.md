@@ -52,5 +52,5 @@ You can also find this plugin in [TShock offical forum][tshockco].
 - `Private` - *Disallows players without permission from entering region.*
 
    [tshockco]: <https://tshock.co/xf/index.php?resources/regiontrigger.157/>
-   [cn]: <https://github.com/mistzzt/RegionTrigger/blob/adv-cn_master/README.md>
+   [cn]: <https://github.com/mistzzt/RegionTrigger/blob/cn/README.md>
    [cndown]: <https://github.com/mistzzt/RegionTrigger/releases>

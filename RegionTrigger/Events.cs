@@ -16,7 +16,7 @@ namespace RegionTrigger
 
 			for (var index = 0; index < values.Length; index++)
 			{
-				var val = (Event) values.GetValue(index);
+				var val = (Event)values.GetValue(index);
 				var enumName = val.ToString();
 				var fieldInfo = typeof(Event).GetField(enumName);
 
@@ -34,7 +34,7 @@ namespace RegionTrigger
 
 			var @event = Event.None;
 
-			var splitedEvents = eventString.Split(new [] {','}, StringSplitOptions.RemoveEmptyEntries);
+			var splitedEvents = eventString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 			foreach (var e in splitedEvents.Select(s => s.Trim()))
 			{
 				Event val;
@@ -68,7 +68,7 @@ namespace RegionTrigger
 				}
 				@event |= val;
 			}
-			if(sb.Length != 0)
+			if (sb.Length != 0)
 				invalids = sb.Remove(sb.Length - 2, 2).ToString();
 			return @event;
 		}

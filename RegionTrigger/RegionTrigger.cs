@@ -151,8 +151,8 @@ namespace RegionTrigger
 				if (player == null || player.HasPermission("regiontrigger.bypass.itemdrop"))
 					return;
 
-				player.SendErrorMessage("你不能在当前区域丢东西!");
-				player.Disable("非法丢东西");
+				player.SendErrorMessage("You cannot drop item in this region!");
+				player.Disable("drop item");
 				args.Handled = true;
 			}
 		}
