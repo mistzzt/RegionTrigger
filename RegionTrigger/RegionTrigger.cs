@@ -613,7 +613,7 @@ namespace RegionTrigger
 
 							var infos = new List<string> {
 								$"*** Information of region {rt.Region.Name} ***",
-								$" * Events: {rt.Events}",
+								$" * Events: {rt.CnEvents}",
 								$" * TempGroup: {rt.TempGroup?.Name ?? "None"}",
 								$" * Message & Interval: {rt.Message ?? "None"}({rt.MsgInterval}s)",
 								$" * EnterMessage: {rt.EnterMsg ?? "None"}",
@@ -650,7 +650,7 @@ namespace RegionTrigger
 							return $"{strarray[0]}({string.Join("/", strarray.Skip(1))})";
 						}, ",", 75).Select(s => s.Insert(0, "   * ")));
 						lines.Add("*** Available events:");
-						lines.AddRange(Events.EventsDescriptions.Select(pair => $"   * {pair.Key} - {pair.Value}"));
+						lines.AddRange(Events.EventsDescriptions.Select(pair => $"   * {Events.InternalToCnName(pair.Key)} - {pair.Value}"));
 
 						PaginationTools.SendPage(args.Player, pageNumber, lines,
 							new PaginationTools.Settings

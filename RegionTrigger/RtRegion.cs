@@ -28,6 +28,8 @@ namespace RegionTrigger
 
 		public string Events => _event.ToString("F");
 
+		public string CnEvents => global::RegionTrigger.Events.InternalFlagsFormat(_event);
+
 		private readonly List<string> _itembans = new List<string>();
 
 		public string Itembans
