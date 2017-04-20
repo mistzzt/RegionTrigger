@@ -13,7 +13,7 @@ using TShockAPI.Hooks;
 
 namespace RegionTrigger
 {
-	[ApiVersion(2, 0)]
+	[ApiVersion(2, 1)]
 	[SuppressMessage("ReSharper", "InvertIf")]
 	public sealed class RegionTrigger : TerrariaPlugin
 	{
@@ -184,7 +184,7 @@ namespace RegionTrigger
 			BitsByte control = args.Control;
 			if (control[5])
 			{
-				var itemName = ply.TPlayer.inventory[args.Item].name;
+				var itemName = ply.TPlayer.inventory[args.Item].Name;
 				if (rt.ItemIsBanned(itemName) && !ply.HasPermission("regiontrigger.bypass.itemban"))
 				{
 					control[5] = false;
@@ -436,8 +436,7 @@ namespace RegionTrigger
 					switch (propset)
 					{
 						case "e":
-							string invalids;
-							var validatedEvents = Events.ValidateEventWhenAdd(propValue, out invalids);
+							var validatedEvents = Events.ValidateEventWhenAdd(propValue, out var invalids);
 							if (!isDel)
 								RtRegions.AddEvents(rt, validatedEvents);
 							else
@@ -447,8 +446,7 @@ namespace RegionTrigger
 								args.Player.SendErrorMessage("Invalid events: {0}", invalids);
 							break;
 						case "pb":
-							short id;
-							if (short.TryParse(propValue, out id) && id > 0 && id < Main.maxProjectileTypes)
+							if (short.TryParse(propValue, out var id) && id > 0 && id < Main.maxProjectileTypes)
 							{
 								if (!isDel)
 								{
@@ -472,25 +470,24 @@ namespace RegionTrigger
 							}
 							else if (items.Count > 1)
 							{
-								TShock.Utils.SendMultipleMatchError(args.Player, items.Select(i => i.name));
+								TShock.Utils.SendMultipleMatchError(args.Player, items.Select(i => i.Name));
 							}
 							else
 							{
 								if (!isDel)
 								{
-									RtRegions.AddItemban(rt, items[0].name);
-									args.Player.SendSuccessMessage("Banned {0} in region {1}.", items[0].name, region.Name);
+									RtRegions.AddItemban(rt, items[0].Name);
+									args.Player.SendSuccessMessage("Banned {0} in region {1}.", items[0].Name, region.Name);
 								}
 								else
 								{
-									RtRegions.RemoveItemban(rt, items[0].name);
-									args.Player.SendSuccessMessage("Unbanned {0} in region {1}.", items[0].name, region.Name);
+									RtRegions.RemoveItemban(rt, items[0].Name);
+									args.Player.SendSuccessMessage("Unbanned {0} in region {1}.", items[0].Name, region.Name);
 								}
 							}
 							break;
 						case "tb":
-							short tileid;
-							if (short.TryParse(propValue, out tileid) && tileid >= 0 && tileid < Main.maxTileSets)
+							if (short.TryParse(propValue, out var tileid) && tileid >= 0 && tileid < Main.maxTileSets)
 							{
 								if (!isDel)
 								{
@@ -542,8 +539,7 @@ namespace RegionTrigger
 						case "mi":
 							if (isDel)
 								throw new Exception("Invalid usage! Proper usage: /rt set-mi <region> <interval>");
-							int itv;
-							if (!int.TryParse(propValue, out itv) || itv < 0)
+							if (!int.TryParse(propValue, out var itv) || itv < 0)
 								throw new Exception("Invalid interval. (Interval must be integer >= 0)");
 							RtRegions.SetMsgInterval(rt, itv);
 							args.Player.SendSuccessMessage("Set message interval of region {0} to {1}.", region.Name, itv);
@@ -632,8 +628,7 @@ namespace RegionTrigger
 						break;
 					case "--help":
 						#region Help
-						int pageNumber;
-						if (!PaginationTools.TryParsePageNumber(args.Parameters, 1, args.Player, out pageNumber))
+						if (!PaginationTools.TryParsePageNumber(args.Parameters, 1, args.Player, out var pageNumber))
 							return;
 
 						var lines = new List<string>
