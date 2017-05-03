@@ -37,8 +37,7 @@ namespace RegionTrigger
 			var splitedEvents = eventString.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
 			foreach (var e in splitedEvents.Select(s => s.Trim()))
 			{
-				Event val;
-				if (!Enum.TryParse(e, true, out val))
+				if (!Enum.TryParse(e, true, out Event val))
 				{
 					continue;
 				}
@@ -60,8 +59,7 @@ namespace RegionTrigger
 			var sb = new StringBuilder();
 			foreach (var e in splitedEvents.Select(s => s.Trim()))
 			{
-				Event val;
-				if (!Enum.TryParse(e, true, out val))
+				if (!Enum.TryParse(e, true, out Event val))
 				{
 					sb.Append(e + ", ");
 					continue;

@@ -14,7 +14,6 @@ using TShockAPI.Hooks;
 namespace RegionTrigger
 {
 	[ApiVersion(2, 1)]
-	[SuppressMessage("ReSharper", "InvertIf")]
 	public sealed class RegionTrigger : TerrariaPlugin
 	{
 		internal RtRegionManager RtRegions;
@@ -23,7 +22,7 @@ namespace RegionTrigger
 
 		public override string Author => "MistZZT";
 
-		public override Version Version => Assembly.GetExecutingAssembly().GetName().Version;
+		public override Version Version => GetType().Assembly.GetName().Version;
 
 		public override string Description => "Perform actions in regions where players are active.";
 
@@ -98,8 +97,8 @@ namespace RegionTrigger
 			var ply = TShock.Players[args.PlayerId];
 			var dt = RtPlayer.GetPlayerInfo(ply);
 
-			if ((dt.ForcePvP == true && !args.Pvp) ||
-				(dt.ForcePvP == false && args.Pvp) ||
+			if (dt.ForcePvP == true && !args.Pvp ||
+				dt.ForcePvP == false && args.Pvp ||
 				!dt.CanTogglePvP)
 			{
 				ply.SendErrorMessage("You can't change your PvP status in this region!");

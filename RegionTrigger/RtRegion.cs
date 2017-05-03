@@ -32,10 +32,7 @@ namespace RegionTrigger
 
 		public string Itembans
 		{
-			get
-			{
-				return string.Join(",", _itembans);
-			}
+			get => string.Join(",", _itembans);
 			set
 			{
 				if (string.IsNullOrWhiteSpace(value))
@@ -52,10 +49,7 @@ namespace RegionTrigger
 		private readonly List<short> _projbans = new List<short>();
 		public string Projbans
 		{
-			get
-			{
-				return string.Join(",", _projbans);
-			}
+			get => string.Join(",", _projbans);
 			set
 			{
 				if (string.IsNullOrWhiteSpace(value))
@@ -64,8 +58,7 @@ namespace RegionTrigger
 				var projids = value.Trim().ToLower().Split(',');
 				foreach (var projid in projids.Where(e => !string.IsNullOrWhiteSpace(e)))
 				{
-					short proj;
-					if (short.TryParse(projid, out proj) && proj > 0 && proj < Main.maxProjectileTypes)
+					if (short.TryParse(projid, out short proj) && proj > 0 && proj < Main.maxProjectileTypes)
 						_projbans.Add(proj);
 				}
 			}
@@ -73,10 +66,7 @@ namespace RegionTrigger
 
 		private readonly List<short> _tilebans = new List<short>();
 		public string Tilebans {
-			get
-			{
-				return string.Join(",", _tilebans);
-			}
+			get => string.Join(",", _tilebans);
 			set
 			{
 				if (string.IsNullOrWhiteSpace(value))
@@ -85,8 +75,7 @@ namespace RegionTrigger
 				var tileids = value.Trim().ToLower().Split(',');
 				foreach (var tileid in tileids.Where(e => !string.IsNullOrWhiteSpace(e)))
 				{
-					short tile;
-					if (short.TryParse(tileid, out tile) && tile > -1 && tile < Main.maxTileSets)
+					if (short.TryParse(tileid, out short tile) && tile > -1 && tile < Main.maxTileSets)
 						_tilebans.Add(tile);
 				}
 			}
@@ -94,10 +83,7 @@ namespace RegionTrigger
 
 		private readonly List<string> _permissions = new List<string>();
 		public string Permissions {
-			get
-			{
-				return string.Join(",", _permissions);
-			}
+			get => string.Join(",", _permissions);
 			set
 			{
 				_permissions.Clear();
