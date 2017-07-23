@@ -185,7 +185,7 @@ namespace RegionTrigger
 		public void SetEnterMessage(RtRegion rt, string message)
 		{
 			var isNull = string.IsNullOrWhiteSpace(message);
-			if (rt.EnterMsg.Equals(message))
+			if (string.Equals(rt.EnterMsg, message))
 				return;
 
 			var query = isNull
@@ -203,7 +203,7 @@ namespace RegionTrigger
 		public void SetLeaveMessage(RtRegion rt, string message)
 		{
 			var isNull = string.IsNullOrWhiteSpace(message);
-			if (rt.LeaveMsg.Equals(message))
+			if (string.Equals(rt.LeaveMsg, message))
 				return;
 
 			var query = isNull
