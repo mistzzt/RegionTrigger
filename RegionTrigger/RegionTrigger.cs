@@ -4,7 +4,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Streams;
 using System.Linq;
-using System.Reflection;
 using Microsoft.Xna.Framework;
 using TerrariaApi.Server;
 using Terraria;
@@ -206,8 +205,8 @@ namespace RegionTrigger
 			if (rt?.HasEvent(Event.TempPermission) != true)
 				return;
 
-			if (rt.HasPermission(args.Permission) && !args.Player.HasPermission("regiontrigger.bypass.tempperm"))
-				args.Handled = true;
+		    if (rt.HasPermission(args.Permission) && !args.Player.HasPermission("regiontrigger.bypass.tempperm"))
+		        args.Result = PermissionHookResult.Granted;
 		}
 
 		private static void OnRegionLeft(TSPlayer player, RtRegion region, RtPlayer data)

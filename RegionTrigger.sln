@@ -1,13 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RegionTrigger", "RegionTrigger\RegionTrigger.csproj", "{2753EE98-D955-4711-BFE5-E8D29EF2633B}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TerrariaServerAPI", "TShock\TerrariaServerAPI\TerrariaServerAPI\TerrariaServerAPI.csproj", "{6877506E-ADC6-4142-98A6-79E4FA02855A}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TShockAPI", "TShock\TShockAPI\TShockAPI.csproj", "{49606449-072B-4CF5-8088-AA49DA586694}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -40,41 +36,11 @@ Global
 		{2753EE98-D955-4711-BFE5-E8D29EF2633B}.Release|x64.Build.0 = Release|Any CPU
 		{2753EE98-D955-4711-BFE5-E8D29EF2633B}.Release|x86.ActiveCfg = Release|Any CPU
 		{2753EE98-D955-4711-BFE5-E8D29EF2633B}.Release|x86.Build.0 = Release|Any CPU
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Debug|Any CPU.ActiveCfg = Debug|x86
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Debug|x64.ActiveCfg = Debug|x64
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Debug|x64.Build.0 = Debug|x64
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Debug|x86.ActiveCfg = Debug|x86
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Debug|x86.Build.0 = Debug|x86
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Mono|Any CPU.ActiveCfg = Mono|x86
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Mono|x64.ActiveCfg = Mono|x64
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Mono|x64.Build.0 = Mono|x64
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Mono|x86.ActiveCfg = Mono|x86
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Mono|x86.Build.0 = Mono|x86
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Release|Any CPU.ActiveCfg = Release|x86
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Release|x64.ActiveCfg = Release|x64
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Release|x64.Build.0 = Release|x64
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Release|x86.ActiveCfg = Release|x86
-		{6877506E-ADC6-4142-98A6-79E4FA02855A}.Release|x86.Build.0 = Release|x86
-		{49606449-072B-4CF5-8088-AA49DA586694}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Debug|x64.Build.0 = Debug|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Debug|x86.Build.0 = Debug|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Mono|Any CPU.ActiveCfg = Release|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Mono|Any CPU.Build.0 = Release|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Mono|x64.ActiveCfg = Release|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Mono|x64.Build.0 = Release|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Mono|x86.ActiveCfg = Release|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Mono|x86.Build.0 = Release|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Release|Any CPU.Build.0 = Release|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Release|x64.ActiveCfg = Release|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Release|x64.Build.0 = Release|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Release|x86.ActiveCfg = Release|Any CPU
-		{49606449-072B-4CF5-8088-AA49DA586694}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {91DF4A31-F3AA-483C-9C3D-C739C78C1D29}
 	EndGlobalSection
 EndGlobal
